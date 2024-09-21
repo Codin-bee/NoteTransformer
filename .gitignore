@@ -1,1 +1,4 @@
 ./vscode/
+.vscode/settings.json
+/.gitignore
+/mingw-w64-v11.0.0.code-workspace
