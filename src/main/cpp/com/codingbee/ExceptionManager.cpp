@@ -7,7 +7,7 @@
 using namespace std;
 
 boolean ExceptionManager::terminationOverride = false;
-float ExceptionManager::terminationDelay = 5000;
+long ExceptionManager::terminationDelay = 5000;
 
 void ExceptionManager::processException(string message, boolean shouldTerminate){
     cerr << "Exception occured: " << message << "\n";

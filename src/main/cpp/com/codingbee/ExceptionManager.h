@@ -9,6 +9,6 @@ class ExceptionManager{
     void processException(std::string message, boolean shouldTerminate);
     private:
     static boolean terminationOverride;
-    static float terminationDelay;
+    static long terminationDelay;
 };
 #endif
