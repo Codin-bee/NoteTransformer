@@ -6,7 +6,7 @@
 
 class ExceptionManager{
     public:
-    void processException(std::string message, boolean shouldTerminate);
+    static void processException(std::string message, boolean shouldTerminate);
     private:
     static boolean terminationOverride;
     static long terminationDelay;
