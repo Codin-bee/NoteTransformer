@@ -5,6 +5,8 @@
 
 using namespace std;
 
+vector<NoteTransformer> FileUtils::transformers;
+
 int FileUtils::getNumberOfFilesInDir(string directoryPath){
         DIR *dp;
         int i = 0;
@@ -21,3 +23,14 @@ int FileUtils::getNumberOfFilesInDir(string directoryPath){
         }
         return i;
     }
+
+void FileUtils::callRegisteredDestructors(){
+    for (int i = 0; i < transformers.size(); i++){
+        transformers.back().~NoteTransformer();
+        transformers.pop_back();
+    }
+}
+
+void FileUtils::registerTransformerToDestruct(NoteTransformer transformer){
+    transformers.push_back(transformer);
+}
