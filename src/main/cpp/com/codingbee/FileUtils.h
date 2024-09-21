@@ -9,6 +9,7 @@ class FileUtils{
         static int getNumberOfFilesInDir(std::string directoryPath);
         static void registerTransformerToDestruct(NoteTransformer transformer);
         static void callRegisteredDestructors();
+        static void saveMatrixToFiles(const string& fileName, float** matrix, int collums, int rows);
     private:
         static vector<NoteTransformer> transformers;
 };

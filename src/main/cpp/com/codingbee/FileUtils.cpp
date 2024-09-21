@@ -1,4 +1,6 @@
 #include "FileUtils.h"
+#include "ExceptionManager.h"
+
 #include <string>
 #include <dirent.h>
 #include <iostream>
@@ -33,4 +35,26 @@ void FileUtils::callRegisteredDestructors(){
 
 void FileUtils::registerTransformerToDestruct(NoteTransformer transformer){
     transformers.push_back(transformer);
+}
+
+void FileUtils::saveMatrixToFiles(const string& fileName, float** matrix, int collums, int rows){
+        ofstream outFile(fileName);
+        
+    if (!outFile.is_open()){
+        cerr << "Exception: the file " + fileName + "could not been open.";
+        ExceptionManager::processException("The file " + fileName + " could not be opened.", true);
+        return;
+    }
+
+    outFile << collums << " " << rows;
+
+    for (int i = 0; i < collums; i++){
+        outFile << "\n";
+        for (int j = 0; j < rows; j++){
+            outFile << matrix[i][j] << " ";
+        }
+    }
+
+    outFile.close();
+    cout << "success";
 }
