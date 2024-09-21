@@ -22,6 +22,6 @@ void ExceptionManager::processException(string message, boolean shouldTerminate)
     }
 
     if(!shouldTerminate){
-        cerr << "The programm did not consider this exception fatal and will not terminate.\n"
+        cerr << "The programm did not consider this exception fatal and will not terminate.\n";
     }
 }
