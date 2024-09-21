@@ -1,5 +1,6 @@
 #include <iostream>
 #include "NoteTransformer.h"
+#include "FileUtils.h"
 
 using namespace std;
 
@@ -12,7 +13,7 @@ void loadParameters(NoteTransformer transformer){
 }
 
 void train(NoteTransformer transformer){
-    
+    int n = FileUtils::getNumberOfFilesInDir("paath");
 }
 
 

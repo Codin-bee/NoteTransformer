@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <dirent.h>
 
 using namespace std;
 
@@ -359,6 +360,13 @@ public:
         return finalOutput;
     }
 
+    void train(int iterations, int batchSize, string directoryPath){
+
+        for (int i = 0; i < iterations; i++){
+
+        }
+    }
+
     private:
 
     void allocateModelMemory(){
@@ -529,11 +537,27 @@ public:
         }
     }
 
-    public :void saveMatrixToFile(const string& fileName, float** matrix, int collums, int rows){
+    int getNumberOfFilesInDir(string directoryPath){
+        DIR *dp;
+  int i = 0;
+  struct dirent *ep;     
+  dp = opendir ("./");
+
+  if (dp != NULL){
+    while (ep = readdir (dp))
+        i++;
+        closedir (dp);
+  }else{
+    cerr << "Exception: the directory " + directoryPath + " could not been open.";
+  }
+  return i;
+    }
+    public :
+    void saveMatrixToFile(const string& fileName, float** matrix, int collums, int rows){
         ofstream outFile(fileName);
         
         if (!outFile.is_open()){
-            cerr << "Exception: file " + fileName + "could not be opened.";
+            cerr << "Exception: the file " + fileName + "could not been open.";
             return;
         }
 
