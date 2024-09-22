@@ -358,25 +358,6 @@ public:
         }
     }
 
-    private: 
-    /// @brief multiplies two given matricies of the same size and than returns their product
-    /// @param matrixA first matrix
-    /// @param matrixB second matrix
-    /// @param n size of the matricies
-    /// @return the product of given matricies
-    float** multiplySameSquareMatricies(float** matrixA, float** matrixB, int n){
-        float ** matrixC = new float*[n];
-        for (int i = 0; i < n; i++){
-            matrixC[i] = new float[n];
-            for (int k =0; k < n; k++){
-                for (int j = 0; j < n; j++)
-                {
-                    matrixC[i][j] = matrixA[i][k] * matrixB[k][j];
-                }
-            }
-        } 
-    }
-
     //Getters and setters
     public :
 
