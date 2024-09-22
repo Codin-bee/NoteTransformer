@@ -1,4 +1,8 @@
 #include "MathUtils.h"
+#include <math.h>
+
+using namespace std;
+
 
 float** MathUtils::multiplySameSquareMatricies(float** matrixA, float** matrixB, int n){
     float ** matrixC = new float*[n];
@@ -13,3 +17,16 @@ float** MathUtils::multiplySameSquareMatricies(float** matrixA, float** matrixB,
         } 
     return matrixC;
 }
+
+void MathUtils::applySoftmax(float* vector, int vectorLength, int temperature){
+        float sum = 0;
+        int i;
+        for (i = 0; i < vectorLength; i++)
+        {
+            sum += exp(vector[i] / temperature);
+        }
+        for (i = 0; i < vectorLength; i++)
+        {
+            vector[i] = vector[i] / sum;
+        }
+    }

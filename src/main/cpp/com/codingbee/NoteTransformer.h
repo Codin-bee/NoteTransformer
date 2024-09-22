@@ -9,6 +9,7 @@
 #include <iostream>
 #include <filesystem>
 #include <dirent.h>
+#include "MathUtils.h"
 
 using namespace std;
 
@@ -228,19 +229,6 @@ public:
         delete[] upscaledVector;
     }
 
-    void applySoftmax(float* vector, int vectorLength){
-        float sum = 0;
-        int i;
-        for (i = 0; i < vectorLength; i++)
-        {
-            sum += exp(vector[i] / softmaxTemperature);
-        }
-        for (i = 0; i < vectorLength; i++)
-        {
-            vector[i] = vector[i] / sum;
-        }
-    }
-
     void ffn(float* vector, int layer, int vectorNo){
 
         float* originalVector = new float[d_model];
@@ -325,7 +313,7 @@ public:
         }
         //Normalization
         for (int i = 0; i < contextSize; i++){
-            applySoftmax(dotProducts[i], contextSize);
+            MathUtils::applySoftmax(dotProducts[i], contextSize, softmaxTemperature);
         }
         float** changes = new float*[contextSize];
         //Value multiplication
