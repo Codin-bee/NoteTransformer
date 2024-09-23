@@ -75,104 +75,14 @@ public:
     NoteTransformer(int context, int layerCount, int headsInLayers, int keyDims, int velocityDims, int prevDims, 
     int nextDims, int absolutePosDims, int connectDims, int modelDims, int ffnDims);
 
-    void init(string dirPath){
-        allocateModelMemory();
-        /*TODO: implement initialization from directory*/
-    }
+    void init(string dirPath);
 
-    void randomInit(){
-        allocateModelMemory();
-         /*TODO: Implement initialization using random generated values*/
-    }
+    void randomInit();
 
-    void save(string dirPath){
-        /*TODO: implement saving matrix into given directory*/
-    }
+    void save(string dirPath);
     
     /// @brief Frees all memory used by the Note Transformer
-    ~NoteTransformer(){
-        delete[] prevNoteAlphas;
-        delete[] nextNoteAlphas;
-        delete[] absolutePosAlphas;
-        delete[] connectingLayerBiases;
-        
-        int i, j, k;
-        for (i = 0; i < contextSize; i++)
-        {
-            delete[] keyEmbeddingMatrix[i];
-            delete[] velocityEmbeddingMatrix[i];
-        }
-        
-        for (i = 0; i < d_connectingLayer; i++)
-        {
-            delete[] connectingLayerWeights[0][i];
-        }
-        delete[] connectingLayerWeights[0];
-
-        for (i = 0; i < d_model; i++)
-        {
-            delete[] connectingLayerWeights[1][i];
-        }
-        delete[] connectingLayerWeights[1];
-
-        for (i = 0; i < layers; i++)
-        {
-            for (j = 0; j < contextSize; j++){
-                delete[] ffnBiases[i][j];
-
-                for (k = 0; k < d_ffn; k++){
-                    delete[] ffnWeights[i][j][0][k];
-                }
-
-                for (k = 0; k < d_model; k++){
-                    delete[] ffnWeights[i][j][1][k];
-                }
-
-                delete[] ffnWeights[i][j][0];
-                delete[] ffnWeights[i][j][1];
-                delete[] ffnWeights[i][j];
-            }
-            delete[] ffnWeights[i];
-
-            for (j = 0; j < headsPerLayer; j++){
-                for (k =0; k < d_model; k++){
-                    delete[] quarryMatricies[i][j][k];
-                    delete[] keyMatricies[i][j][k];
-                    delete[] valueDownMatricies[i][j][k];
-                }
-
-                for (k =0; k < d_attention; k++){
-                    delete[] valueUpMatricies[i][j][k];
-                }
-
-                quarryMatricies[i][j];
-                keyMatricies[i][j];
-                valueUpMatricies[i][j];
-                valueDownMatricies[i][j];
-            }
-
-            quarryMatricies[i];
-            keyMatricies[i];
-            valueUpMatricies[i];
-            valueDownMatricies[i];
-            
-        }
-
-        for (i = 0; i < d_model; i++){
-            delete[] unembeddingMatrix[i];
-        }
-
-        delete[] ffnBiases;
-        delete[] ffnWeights;
-        delete[] connectingLayerWeights;
-        delete[] keyEmbeddingMatrix;
-        delete[] velocityEmbeddingMatrix;
-        delete[] quarryMatricies;
-        delete[] keyMatricies;
-        delete[] valueUpMatricies;
-        delete[] valueDownMatricies;
-        delete[] unembeddingMatrix;
-    }
+    ~NoteTransformer();
 
 
     /// @brief Processes given matrix
@@ -182,183 +92,29 @@ public:
     ///         probabilities for velocity value; 256-258 timings (previous note, next note, absolute position)
     float** process(int** matrixToProcess);
 
-    void train(int iterations, int batchSize, string directoryPath){
-
-        for (int i = 0; i < iterations; i++){
-            /*TODO: implement training algorithm*/
-        }
-    }
+    void train(int iterations, int batchSize, string directoryPath);
 
     private:
 
-    void allocateModelMemory(){
-        /*TODO: implement memory allocation for all network vectos, matricies and tensors*/
-    }
+    void allocateModelMemory();
 
-    void coonectLayer(float* originalVector, float* downscaledVector, int vectorNo){
-        downscaledVector = new float[d_model];
+    void connectLayer(float* originalVector, float* downscaledVector, int vectorNo);
 
-        float* upscaledVector = new float[d_connectingLayer];
+    void ffn(float* vector, int layer, int vectorNo);
 
-        float neuronValue;
+    void attentionHead(float** theMatrix, float** outputMatrix, int layerNo, int headNo);
 
-        int i, j;
-
-        for (i = 0; i < d_connectingLayer; i++)
-        {
-            neuronValue = 0;
-            for (j = 0; j < d_embedding; j++)
-            {
-               neuronValue += originalVector[j] * connectingLayerWeights[0][i][j];
-            }
-            upscaledVector[i] = neuronValue + connectingLayerBiases[i];
-        }
-
-
-        for (i = 0; i < d_model; i++)
-        {
-            neuronValue = 0;
-
-            for (j = 0; j < d_connectingLayer; j++)
-            {
-                neuronValue += originalVector[j] * connectingLayerWeights[0][vectorNo][j];
-            }
-            downscaledVector[i] = neuronValue;
-        }
-
-        delete[] upscaledVector;
-    }
-
-    void ffn(float* vector, int layer, int vectorNo){
-
-        float* originalVector = new float[d_model];
-
-        float* hiddenVector = new float[d_ffn];
-
-        float neuronValue;
-
-        int i, j;
-
-        for (i = 0; i < d_ffn; i++)
-        {
-            originalVector[i] = vector[i];
-            vector[i] = 0;
-        }
-        
-        for (i = 0; i < d_ffn; i++){
-            neuronValue = 0;
-            for (j = 0; j < d_model; j++)
-            {
-                neuronValue += originalVector[i] * ffnWeights[layer][vectorNo][0][j][i];
-            }
-            hiddenVector[i] = neuronValue + ffnBiases[layer][vectorNo][i];
-        }
-
-        delete[] originalVector;
-
-        for (i = 0; i < d_model; i++)
-        {
-            neuronValue = 0;
-            for (j = 0; j < d_ffn; j++)
-            {
-                neuronValue += hiddenVector[i] * ffnWeights[layer][vectorNo][1][j][i];
-            }
-            vector[i] = neuronValue;
-        }
-        delete[] hiddenVector;
-    }
-
-    void attentionHead(float** theMatrix, float** outputMatrix, int layerNo, int headNo){
-        //output[tokeNo][dimension(_model)]
-        //Key, quarry and value calculation
-        float** quarries = new float*[contextSize];
-        float** keys = new float*[contextSize];
-        float** values = new float*[contextSize];
-        float** dotProducts = new float*[contextSize];
-
-        for (int i = 0; i < contextSize; i++){
-            quarries[i] = new float[d_attention];
-            keys[i] = new float[d_attention];
-            values[i] = new float[d_attention];
-            dotProducts[i] = new float[contextSize];
-
-            for (int j = 0; j < d_attention; j++){
-                for (int k = 0; k < d_model; k++){
-                    quarries[i][j] += quarryMatricies[layerNo][headNo][j][k] * theMatrix[i][k];
-                    keys[i][j] += keyMatricies[layerNo][headNo][j][k] * theMatrix[i][k];
-                    values[i][j] = valueDownMatricies[layerNo][headNo][j][k] * theMatrix[i][k];
-                }
-            }
-        }
-
-        //Key + quarry multiplication
-        for (int i = 0; i < contextSize; i++){
-            for (int j = 0; j < contextSize; j++){
-                for (int k = 0; k < d_attention; k++){
-                    dotProducts[i][j] += quarries[i][k] * keys[j][k];
-                }
-                dotProducts[i][j] /= sqrtD_k;
-            }
-        }
-
-        //Masking
-        for (int i = 0; i < contextSize; i++){
-            for (int j = 0; j < contextSize; j++){
-                if (i < j){
-                    for (int k = 0; k < d_attention; k++){
-                        dotProducts[i][j] = 0.000000001;
-                    }
-                }
-            }
-        }
-        //Normalization
-        for (int i = 0; i < contextSize; i++){
-            MathUtils::applySoftmax(dotProducts[i], contextSize, softmaxTemperature);
-        }
-        float** changes = new float*[contextSize];
-        //Value multiplication
-        for (int i = 0; i < contextSize; i++){
-            changes[i] = new float[d_attention];
-            for (int j = 0; j < contextSize; j++){
-                for (int k = 0; k < d_attention; k++){
-                    changes[i][k] += values[j][k] * dotProducts[i][j];
-                }
-            }
-        }
-
-        //Upscaling back to d_model
-        outputMatrix = new float*[contextSize];
-        for (int i = 0; i < contextSize; i++){
-            outputMatrix[i] = new float[d_model];
-            for (int j = 0; j < d_model; j++){
-                for (int k = 0; k < d_attention; k++){
-                    outputMatrix[i][j] += changes[i][j] * valueUpMatricies[layerNo][headNo][k][j];
-                }
-            }
-        }
-    }
-
-    void addChanges(float* vector, float*** changes, int tokenNo){
-        for (int i = 0; i < d_model; i++){
-            for (int j = 0; j < headsPerLayer; j++){
-                vector[i] += changes[j][tokenNo][i];
-            }
-        }
-    }
+    void addChanges(float* vector, float*** changes, int tokenNo);
 
     //Getters and setters
     public :
 
     /// @brief returns the temperature(T) used for the softmax function
     /// @return the temperature
-    float getSoftmaxTemperature(){
-        return softmaxTemperature;
-    }
+    float getSoftmaxTemperature();
 
     /// @brief Sets the new temperature(T) used in the softmax function
     /// @param t the new temperature
-    void setSoftmaxTemperature(float t){
-        softmaxTemperature = t;
-    }
+    void setSoftmaxTemperature(float t);
 };
 #endif
