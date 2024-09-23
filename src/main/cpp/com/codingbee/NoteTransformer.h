@@ -100,14 +100,17 @@ public:
 
     void connectLayer(float* originalVector, float* downscaledVector, int vectorNo);
 
+    /// @brief processes given vector using feed forward network with two transformations: first one with bias, second one without it
+    /// @param vector processed vector
+    /// @param layer index of the transformer layer
     void ffn(float* vector, int layer, int vectorNo);
 
     /// @brief calculates changes which should be added to given embeddings in order to make them represent their actual meaning in the context
     /// @param theMatrix the embeddings
     /// @param outputMatrix matrix which the method writes all changes into
-    /// @param layerNo index of the vector in the processed matrix
+    /// @param layer index of the transformer layer
     /// @param headNo index of the attention matricies
-    void attentionHead(float** theMatrix, float** outputMatrix, int layerNo, int headNo);
+    void attentionHead(float** theMatrix, float** outputMatrix, int layer, int headNo);
 
     /// @brief Adds the given changes proposed by the attention heads to the vector
     /// @param vector the vector, which the function writes into
