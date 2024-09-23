@@ -102,8 +102,17 @@ public:
 
     void ffn(float* vector, int layer, int vectorNo);
 
+    /// @brief calculates changes which should be added to given embeddings in order to make them represent their actual meaning in the context
+    /// @param theMatrix the embeddings
+    /// @param outputMatrix matrix which the method writes all changes into
+    /// @param layerNo index of the vector in the processed matrix
+    /// @param headNo index of the attention matricies
     void attentionHead(float** theMatrix, float** outputMatrix, int layerNo, int headNo);
 
+    /// @brief Adds the given changes proposed by the attention heads to the vector
+    /// @param vector the vector, which the function writes into
+    /// @param changes the changes proposed by the attention head
+    /// @param tokeNo index of the vector in the processed matrix
     void addChanges(float* vector, float*** changes, int tokenNo);
 
     //Getters and setters
