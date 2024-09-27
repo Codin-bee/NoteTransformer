@@ -348,9 +348,9 @@ void NoteTransformer::allocateModelMemory(){
         /*TODO: implement memory allocation for all network vectos, matricies and tensors*/
     }
 
-void NoteTransformer::train(int iterations, int batchSize, string directoryPath){
+void NoteTransformer::train(TrainingSettings settings){
 
-        for (int i = 0; i < iterations; i++){
+        for (int i = 0; i < settings.getEpochs(); i++){
             /*TODO: implement training algorithm*/
         }
     }

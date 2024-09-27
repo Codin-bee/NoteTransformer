@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <dirent.h>
 #include "MathUtils.h"
+#include "TrainingSettings.h"
 
 using namespace std;
 
@@ -92,7 +93,7 @@ public:
     ///         probabilities for velocity value; 256-258 timings (previous note, next note, absolute position)
     float** process(int** matrixToProcess);
 
-    void train(int iterations, int batchSize, string directoryPath);
+    void train(TrainingSettings settings);
 
     private:
 
@@ -103,6 +104,7 @@ public:
     /// @brief processes given vector using feed forward network with two transformations: first one with bias, second one without it
     /// @param vector processed vector
     /// @param layer index of the transformer layer
+    /// @param vectorNo index of the vector in processed matrix
     void ffn(float* vector, int layer, int vectorNo);
 
     /// @brief calculates changes which should be added to given embeddings in order to make them represent their actual meaning in the context
