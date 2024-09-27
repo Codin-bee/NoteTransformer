@@ -3,3 +3,4 @@
 /.gitignore
 /mingw-w64-v11.0.0.code-workspace
 /.vscode/c_cpp_properties.json
+.vscode/c_cpp_properties.json
