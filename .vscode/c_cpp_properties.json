@@ -5,7 +5,10 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "C:\\Users\\theco\\mingw-w64-v11.0.0",
-                "C:\\Users\\theco\\cpp\\MLProject"
+                "C:\\Users\\theco\\cpp\\MLProject",
+                "${workspaceFolder}/src/main/cpp/com/codingbee",
+                "${workspaceFolder}/test/main/cpp/com/codingbee/testingMethods",
+                "${workspaceFolder}/test/main/cpp/com/codingbee/tests/MathUtils"
             ],
             "defines": [
                 "_DEBUG",
