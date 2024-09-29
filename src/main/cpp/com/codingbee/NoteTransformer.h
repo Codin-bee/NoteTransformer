@@ -81,6 +81,10 @@ public:
     void randomInit();
 
     void save(string dirPath);
+
+    float calculateCost(int** input, float** expectedOutput);
+
+    float calculateAverageCost(string dirPath, int startIndex, int endIndex);
     
     /// @brief Frees all memory used by the Note Transformer
     ~NoteTransformer();

@@ -1,4 +1,5 @@
 #include "NoteTransformer.h"
+#include "FileUtils.h"
 
 using namespace std;
 
@@ -349,11 +350,45 @@ void NoteTransformer::allocateModelMemory(){
     }
 
 void NoteTransformer::train(TrainingSettings settings){
-
+        float sum;
+        int n;
         for (int i = 0; i < settings.getEpochs(); i++){
-            /*TODO: implement training algorithm*/
+            for(int j = 0; j < FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / settings.getBatchSize(); j++){
+                //~for every batch
+                //LOOP EVERY PARAMETER
+                    sum = 0;
+                    n = 0;
+                    //CALCULATE EVERAGE LOSS
+                    //UPDATE THE PARAM
+            }
         }
     }
+
+float NoteTransformer::calculateCost(int** input, float** expectedOutput){
+    float cost  = 0;
+    int j;
+    float** recieved = process(input);
+    for (int i = 0; i < contextSize; i++){
+        for (j = 0; j < keyRange; j++){
+            cost += pow((recieved[i][j] - expectedOutput[i][j]), 2);
+        }
+        for (j = keyRange; j < velocityRange; j++){
+            cost += pow((recieved[i][j] - expectedOutput[i][j]), 2);
+        }
+        for (j = keyRange + velocityRange; j < keyRange + velocityRange + 3; j++){
+            cost += abs((recieved[i][j] - expectedOutput[i][j]));
+        }
+    }
+    for (j = 0; j < contextSize; j++){
+        delete[] recieved[j];
+    }
+    delete[] recieved;
+    return cost;
+}
+
+float NoteTransformer::calculateAverageCost(string dirPath, int startIndex, int endIndex){
+    return 0;
+}
 
 NoteTransformer::~NoteTransformer(){
         delete[] prevNoteAlphas;
@@ -453,4 +488,3 @@ void NoteTransformer::init(string dirPath){
         allocateModelMemory();
         /*TODO: implement initialization from directory*/
     }
-
