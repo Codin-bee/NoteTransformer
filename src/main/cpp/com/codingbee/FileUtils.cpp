@@ -4,6 +4,7 @@
 #include <string>
 #include <dirent.h>
 #include <iostream>
+#include "Exception.h"
 
 using namespace std;
 
@@ -38,12 +39,10 @@ void FileUtils::registerTransformerToDestruct(NoteTransformer transformer){
 }
 
 void FileUtils::saveMatrixToFiles(const string& fileName, float** matrix, int collums, int rows){
-        ofstream outFile(fileName);
+    ofstream outFile(fileName);
         
-    if (!outFile.is_open()){
-        cerr << "Exception: the file " + fileName + "could not been open.";
-        ExceptionManager::processException("The file " + fileName + " could not be opened.", true);
-        return;
+    if (!outFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
     }
 
     outFile << collums << " " << rows;
@@ -56,5 +55,36 @@ void FileUtils::saveMatrixToFiles(const string& fileName, float** matrix, int co
     }
 
     outFile.close();
+    if (!outFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
+    }
     cout << "success";
+}
+
+float** FileUtils::loadMatrixFromFile(string fileName) {
+    ifstream inFile(fileName);
+
+    if (!inFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
+    }
+
+    int collums, rows;
+    inFile >> collums >> rows;
+
+    float** matrix = new float*[collums];
+    for (int i = 0; i < collums; ++i) {
+        matrix[i] = new float[rows];
+    }
+
+    for (int i = 0; i < collums; ++i) {
+        for (int j = 0; j < rows; ++j) {
+            inFile >> matrix[i][j];
+        }
+    }
+
+    inFile.close();
+    if (!inFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
+    }
+    return matrix;
 }
