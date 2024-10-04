@@ -27,8 +27,8 @@ private:
     const int velocityRange = 128;
 
     //Embedding matricies
-    int** keyEmbeddingMatrix;
-    int** velocityEmbeddingMatrix;
+    float** keyEmbeddingMatrix;
+    float** velocityEmbeddingMatrix;
 
     //Embedding alphas
     float* prevNoteAlphas;
@@ -38,19 +38,19 @@ private:
     //Connecting layer
     float*** connectingLayerWeights;
     float* connectingLayerBiases;
-
+    
     //FNN weights and biases
-    float***** ffnWeights;
-    float*** ffnBiases;
+    float**** ffnWeights;///
+    float** ffnBiases;///
 
     //Attention matricies
-    float**** quarryMatricies;
-    float**** keyMatricies;
-    float**** valueUpMatricies;
-    float**** valueDownMatricies;
+    float**** quarryMatricies;///
+    float**** keyMatricies;///
+    float**** valueUpMatricies;///
+    float**** valueDownMatricies;///
 
     //Unembedding
-    float** unembeddingMatrix;
+    float** unembeddingMatrix;///
 
     //Other essentials and utilities
     int softmaxTemperature;
@@ -103,13 +103,12 @@ public:
 
     void allocateModelMemory();
 
-    void connectLayer(float* originalVector, float* downscaledVector, int vectorNo);
+    void connectLayer(float* originalVector, float* downscaledVector);
 
     /// @brief processes given vector using feed forward network with two transformations: first one with bias, second one without it
     /// @param vector processed vector
     /// @param layer index of the transformer layer
-    /// @param vectorNo index of the vector in processed matrix
-    void ffn(float* vector, int layer, int vectorNo);
+    void ffn(float* vector, int layer);
 
     /// @brief calculates changes which should be added to given embeddings in order to make them represent their actual meaning in the context
     /// @param theMatrix the embeddings
