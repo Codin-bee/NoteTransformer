@@ -61,7 +61,7 @@ void FileUtils::saveMatrixToFiles(const string& fileName, float** matrix, int co
     cout << "success";
 }
 
-float** FileUtils::loadMatrixFromFile(string fileName) {
+float** FileUtils::readFloatMatrixFromFile(string fileName) {
     ifstream inFile(fileName);
 
     if (!inFile.is_open()) {
@@ -77,6 +77,36 @@ float** FileUtils::loadMatrixFromFile(string fileName) {
     }
 
     for (int i = 0; i < collums; ++i) {
+        for (int j = 0; j < rows; ++j) {
+            inFile >> matrix[i][j];
+        }
+    }
+
+    inFile.close();
+    if (!inFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
+    }
+    return matrix;
+}
+
+
+int** FileUtils::readIntMatrixFromFile(string fileName) {
+    int i;
+    ifstream inFile(fileName);
+
+    if (!inFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
+    }
+
+    int collums, rows;
+    inFile >> collums >> rows;
+
+    int** matrix = new int*[collums];
+    for (i = 0; i < collums; ++i) {
+        matrix[i] = new int[rows];
+    }
+
+    for (i = 0; i < collums; ++i) {
         for (int j = 0; j < rows; ++j) {
             inFile >> matrix[i][j];
         }

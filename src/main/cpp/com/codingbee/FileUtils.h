@@ -10,7 +10,8 @@ class FileUtils{
         static void registerTransformerToDestruct(NoteTransformer transformer);
         static void callRegisteredDestructors();
         static void saveMatrixToFiles(const string& fileName, float** matrix, int collums, int rows);
-        static float** loadMatrixFromFile(std::string fileName);
+        static float** readFloatMatrixFromFile(std::string fileName);
+        static int** readIntMatrixFromFile(std::string fileName);
     private:
         static vector<NoteTransformer> transformers;
 };
