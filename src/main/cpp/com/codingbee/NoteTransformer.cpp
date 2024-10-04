@@ -76,7 +76,6 @@ float** NoteTransformer::process(int** matrixToProcess){
         
         //Layers
         for (int i = 0; i < layers; i++){
-            int j;
 
             //Attention block
             float*** recivedChanges = new float**[headsPerLayer];
@@ -136,13 +135,13 @@ float** NoteTransformer::process(int** matrixToProcess){
 
         //Unembedding
         float** finalOutput = new float*[contextSize];
-        for (int i = 0; i < contextSize; i++){
+        for (i = 0; i < contextSize; i++){
             finalOutput[i] = new float[outputMatrixRows];
         }
 
-        for (int i = 0; i < contextSize; i++){
-            for (int j = 0; j < outputMatrixRows; j++){
-                for (int k = 0; k < d_model; k++){
+        for (i = 0; i < contextSize; i++){
+            for (j = 0; j < outputMatrixRows; j++){
+                for (k = 0; k < d_model; k++){
                     finalOutput[i][j] += processedMatrix[i][k] * unembeddingMatrix[j][k];
                 }
             }
@@ -186,21 +185,25 @@ float** NoteTransformer::process(int** matrixToProcess){
 }
 
 void NoteTransformer::attentionHead(float** theMatrix, float** outputMatrix, int layerNo, int headNo){
-        //output[tokeNo][dimension(_model)]
+        int i, j, k;
+
+        /*output[tokeNo][dimension(_model)]*/
+
+
         //Key, quarry and value calculation
         float** quarries = new float*[contextSize];
         float** keys = new float*[contextSize];
         float** values = new float*[contextSize];
         float** dotProducts = new float*[contextSize];
 
-        for (int i = 0; i < contextSize; i++){
+        for (i = 0; i < contextSize; i++){
             quarries[i] = new float[d_attention];
             keys[i] = new float[d_attention];
             values[i] = new float[d_attention];
             dotProducts[i] = new float[contextSize];
 
-            for (int j = 0; j < d_attention; j++){
-                for (int k = 0; k < d_model; k++){
+            for (j = 0; j < d_attention; j++){
+                for (k = 0; k < d_model; k++){
                     quarries[i][j] += quarryMatricies[layerNo][headNo][j][k] * theMatrix[i][k];
                     keys[i][j] += keyMatricies[layerNo][headNo][j][k] * theMatrix[i][k];
                     values[i][j] = valueDownMatricies[layerNo][headNo][j][k] * theMatrix[i][k];
@@ -209,9 +212,9 @@ void NoteTransformer::attentionHead(float** theMatrix, float** outputMatrix, int
         }
 
         //Key + quarry multiplication
-        for (int i = 0; i < contextSize; i++){
-            for (int j = 0; j < contextSize; j++){
-                for (int k = 0; k < d_attention; k++){
+        for (i = 0; i < contextSize; i++){
+            for (j = 0; j < contextSize; j++){
+                for (k = 0; k < d_attention; k++){
                     dotProducts[i][j] += quarries[i][k] * keys[j][k];
                 }
                 dotProducts[i][j] /= sqrtD_k;
@@ -219,25 +222,25 @@ void NoteTransformer::attentionHead(float** theMatrix, float** outputMatrix, int
         }
 
         //Masking
-        for (int i = 0; i < contextSize; i++){
-            for (int j = 0; j < contextSize; j++){
+        for (i = 0; i < contextSize; i++){
+            for (j = 0; j < contextSize; j++){
                 if (i < j){
-                    for (int k = 0; k < d_attention; k++){
+                    for (k = 0; k < d_attention; k++){
                         dotProducts[i][j] = 0.000000001;
                     }
                 }
             }
         }
         //Normalization
-        for (int i = 0; i < contextSize; i++){
+        for (i = 0; i < contextSize; i++){
             MathUtils::applySoftmax(dotProducts[i], contextSize, softmaxTemperature);
         }
         float** changes = new float*[contextSize];
         //Value multiplication
-        for (int i = 0; i < contextSize; i++){
+        for (i = 0; i < contextSize; i++){
             changes[i] = new float[d_attention];
-            for (int j = 0; j < contextSize; j++){
-                for (int k = 0; k < d_attention; k++){
+            for (j = 0; j < contextSize; j++){
+                for (k = 0; k < d_attention; k++){
                     changes[i][k] += values[j][k] * dotProducts[i][j];
                 }
             }
@@ -245,10 +248,10 @@ void NoteTransformer::attentionHead(float** theMatrix, float** outputMatrix, int
 
         //Upscaling back to d_model
         outputMatrix = new float*[contextSize];
-        for (int i = 0; i < contextSize; i++){
+        for (i = 0; i < contextSize; i++){
             outputMatrix[i] = new float[d_model];
-            for (int j = 0; j < d_model; j++){
-                for (int k = 0; k < d_attention; k++){
+            for (j = 0; j < d_model; j++){
+                for (k = 0; k < d_attention; k++){
                     outputMatrix[i][j] += changes[i][j] * valueUpMatricies[layerNo][headNo][k][j];
                 }
             }
@@ -458,8 +461,32 @@ float NoteTransformer::calculateCost(int** input, float** expectedOutput){
 }
 
 float NoteTransformer::calculateAverageCost(string dirPath, int startIndex, int endIndex){
-    return 0;
+    float sum = 0;
+    int n = 0;
+    for (int i = startIndex; i <= endIndex; i++){
+        sum += calculateCost(FileUtils::readIntMatrixFromFile(dirPath.append("input").append(to_string(i))), 
+                FileUtils::readFloatMatrixFromFile(dirPath.append("output").append(to_string(i))));
+        n++;
+    }
+    return sum / n;
 }
+
+
+void NoteTransformer::save(string dirPath){
+
+        /*TODO: implement saving matrix into given directory*/
+    }
+
+void NoteTransformer::randomInit(){
+        allocateModelMemory();
+         /*TODO: Implement initialization using random generated values*/
+    }
+
+void NoteTransformer::init(string dirPath){
+        allocateModelMemory();
+        /*TODO: implement initialization from directory*/
+    }
+
 
 NoteTransformer::~NoteTransformer(){
         delete[] prevNoteAlphas;
@@ -543,20 +570,4 @@ NoteTransformer::~NoteTransformer(){
         delete[] valueUpMatricies;
         delete[] valueDownMatricies;
         delete[] unembeddingMatrix;
-    }
-
-
-void NoteTransformer::save(string dirPath){
-
-        /*TODO: implement saving matrix into given directory*/
-    }
-
-void NoteTransformer::randomInit(){
-        allocateModelMemory();
-         /*TODO: Implement initialization using random generated values*/
-    }
-
-void NoteTransformer::init(string dirPath){
-        allocateModelMemory();
-        /*TODO: implement initialization from directory*/
     }
