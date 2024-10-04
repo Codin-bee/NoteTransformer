@@ -38,19 +38,19 @@ private:
     //Connecting layer
     float*** connectingLayerWeights;
     float* connectingLayerBiases;
-    
+
     //FNN weights and biases
-    float**** ffnWeights;///
-    float** ffnBiases;///
+    float**** ffnWeights;
+    float** ffnBiases;
 
     //Attention matricies
-    float**** quarryMatricies;///
-    float**** keyMatricies;///
-    float**** valueUpMatricies;///
-    float**** valueDownMatricies;///
+    float**** quarryMatricies;
+    float**** keyMatricies;
+    float**** valueUpMatricies;
+    float**** valueDownMatricies;
 
     //Unembedding
-    float** unembeddingMatrix;///
+    float** unembeddingMatrix;
 
     //Other essentials and utilities
     int softmaxTemperature;

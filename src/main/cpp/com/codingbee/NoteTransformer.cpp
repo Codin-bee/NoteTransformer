@@ -59,12 +59,11 @@ float** NoteTransformer::process(int** matrixToProcess){
 
         //Connecting layer
         float** processedMatrix = new float*[contextSize];
-    
         vector<thread> threads;
         for (i = 0; i < contextSize; i++){
             threads.push_back(
             std::thread([this, i, &embeddedMatrix, &processedMatrix]() {
-                this->connectLayer(embeddedMatrix[i], processedMatrix[i], i);
+                this->connectLayer(embeddedMatrix[i], processedMatrix[i]);
             }));
 
         }
@@ -120,7 +119,7 @@ float** NoteTransformer::process(int** matrixToProcess){
             threads.push_back(
                 std::thread(
                     [this, i, j, &processedMatrix]() {
-                    this->ffn(processedMatrix[j], i, j);
+                    this->ffn(processedMatrix[j], i);
                     }
                 )
             );
@@ -272,7 +271,7 @@ void NoteTransformer::setSoftmaxTemperature(float t){
         softmaxTemperature = t;
     }
 
-void NoteTransformer::ffn(float* vector, int layer, int vectorNo){
+void NoteTransformer::ffn(float* vector, int layer){
 
         float* originalVector = new float[d_model];
 
@@ -292,9 +291,9 @@ void NoteTransformer::ffn(float* vector, int layer, int vectorNo){
             neuronValue = 0;
             for (j = 0; j < d_model; j++)
             {
-                neuronValue += originalVector[i] * ffnWeights[layer][vectorNo][0][j][i];
+                neuronValue += originalVector[i] * ffnWeights[layer][0][j][i];
             }
-            hiddenVector[i] = neuronValue + ffnBiases[layer][vectorNo][i];
+            hiddenVector[i] = neuronValue + ffnBiases[layer][i];
         }
 
         delete[] originalVector;
@@ -304,14 +303,14 @@ void NoteTransformer::ffn(float* vector, int layer, int vectorNo){
             neuronValue = 0;
             for (j = 0; j < d_ffn; j++)
             {
-                neuronValue += hiddenVector[i] * ffnWeights[layer][vectorNo][1][j][i];
+                neuronValue += hiddenVector[i] * ffnWeights[layer][1][j][i];
             }
             vector[i] = neuronValue;
         }
         delete[] hiddenVector;
     }
 
-void NoteTransformer::connectLayer(float* originalVector, float* downscaledVector, int vectorNo){
+void NoteTransformer::connectLayer(float* originalVector, float* downscaledVector){
         downscaledVector = new float[d_model];
 
         float* upscaledVector = new float[d_connectingLayer];
@@ -337,7 +336,7 @@ void NoteTransformer::connectLayer(float* originalVector, float* downscaledVecto
 
             for (j = 0; j < d_connectingLayer; j++)
             {
-                neuronValue += originalVector[j] * connectingLayerWeights[0][vectorNo][j];
+                neuronValue += originalVector[j] * connectingLayerWeights[1][i][j];
             }
             downscaledVector[i] = neuronValue;
         }
@@ -346,7 +345,79 @@ void NoteTransformer::connectLayer(float* originalVector, float* downscaledVecto
     }
 
 void NoteTransformer::allocateModelMemory(){
-        /*TODO: implement memory allocation for all network vectos, matricies and tensors*/
+        int i, j, k;
+        //Embedding matricies
+        keyEmbeddingMatrix = new float*[keyRange];
+        for (i = 0; i < keyRange; i++){
+            keyEmbeddingMatrix[i] = new float[d_keyEmbedding];
+        }
+        velocityEmbeddingMatrix = new float*[velocityRange];
+        for (i= 0; i < velocityRange; i++){
+            velocityEmbeddingMatrix[i] = new float[d_velocityEmbedding];
+        }
+
+        //Embedding aplhas
+        prevNoteAlphas = new float[d_prevNoteEmbedding];
+        nextNoteAlphas = new float[d_nextNoteEmbedding];
+        absolutePosAlphas = new float[d_absolutePosition];
+
+        //Connecting layer
+        connectingLayerWeights[0] = new float*[d_connectingLayer];
+        for (i = 0; i < d_connectingLayer; i++){
+                connectingLayerWeights[0][i] = new float[d_embedding];
+        }
+        connectingLayerWeights[1] = new float*[d_model];
+        for (i = 0; i < d_model; i++){
+            connectingLayerWeights[d_connectingLayer];
+        }
+        connectingLayerBiases = new float[d_connectingLayer];
+
+        //FFN weights and biases
+        ffnWeights = new float***[layers];
+        ffnBiases = new float*[layers];
+        for (i = 0; i < layers; i++){
+            ffnWeights[i][0] = new float*[d_ffn];
+            for (j = 0; j < d_ffn; j++){
+                ffnWeights[i][0][j] = new float[d_model];
+            }
+            ffnWeights[i][1] = new float*[d_model];
+            for (j = 0; j < d_model; j++){
+                ffnWeights[i][1][j] =  new float[d_ffn];
+            }
+            ffnBiases[i] = new float[d_ffn];
+        }
+
+        //Attention matricies
+        keyMatricies = new float ***[layers];
+        quarryMatricies = new float ***[layers];
+        valueUpMatricies = new float ***[layers];
+        valueDownMatricies = new float ***[layers];
+
+        for (i = 0; i < layers; i++){
+            keyMatricies[i] = new float **[headsPerLayer];
+            quarryMatricies[i] = new float **[headsPerLayer];
+            valueUpMatricies[i] = new float **[headsPerLayer];
+            valueDownMatricies[i] = new float **[headsPerLayer];
+            for (j = 0; j < headsPerLayer; j++){
+                keyMatricies[i][j] = new float *[d_attention];
+                quarryMatricies[i][j] = new float *[d_attention];
+                valueUpMatricies[i][j] = new float *[d_attention];
+                valueDownMatricies[i][j] = new float *[d_attention];
+                for (k = 0; k < d_attention; k++){
+                    keyMatricies[i][j][k] = new float [d_model];
+                    quarryMatricies[i][j][k] = new float [d_model];
+                    valueUpMatricies[i][j][k] = new float [d_model];
+                    valueDownMatricies[i][j][k] = new float [d_model];
+                }
+            }
+        }
+
+        //Unembedding
+        unembeddingMatrix = new float*[keyRange + velocityRange + 3];
+        for (i = 0; i < keyRange + velocityRange + 3; i++){
+            unembeddingMatrix[i] = new float[d_model];
+        }
+
     }
 
 void NoteTransformer::train(TrainingSettings settings){
@@ -418,14 +489,14 @@ NoteTransformer::~NoteTransformer(){
         for (i = 0; i < layers; i++)
         {
             for (j = 0; j < contextSize; j++){
-                delete[] ffnBiases[i][j];
+                delete[] ffnBiases[i];
 
                 for (k = 0; k < d_ffn; k++){
-                    delete[] ffnWeights[i][j][0][k];
+                    delete[] ffnWeights[i][0][k];
                 }
 
                 for (k = 0; k < d_model; k++){
-                    delete[] ffnWeights[i][j][1][k];
+                    delete[] ffnWeights[i][1][k];
                 }
 
                 delete[] ffnWeights[i][j][0];
@@ -476,6 +547,7 @@ NoteTransformer::~NoteTransformer(){
 
 
 void NoteTransformer::save(string dirPath){
+
         /*TODO: implement saving matrix into given directory*/
     }
 
