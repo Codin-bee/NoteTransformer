@@ -371,7 +371,7 @@ void NoteTransformer::allocateModelMemory(){
         }
         connectingLayerWeights[1] = new float*[d_model];
         for (i = 0; i < d_model; i++){
-            connectingLayerWeights[d_connectingLayer];
+            connectingLayerWeights[1][i] = new float[d_connectingLayer];
         }
         connectingLayerBiases = new float[d_connectingLayer];
 
@@ -424,16 +424,89 @@ void NoteTransformer::allocateModelMemory(){
     }
 
 void NoteTransformer::train(TrainingSettings settings){
-        float sum;
-        int n;
-        for (int i = 0; i < settings.getEpochs(); i++){
-            for(int j = 0; j < FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / settings.getBatchSize(); j++){
-                //~for every batch
-                //LOOP EVERY PARAMETER
-                    sum = 0;
-                    n = 0;
-                    //CALCULATE EVERAGE LOSS
-                    //UPDATE THE PARAM
+        int i, j, k, l;
+        for (int epoch = 0; epoch < settings.getEpochs(); epoch++){
+            for(int batchNo = 0; batchNo < FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / settings.getBatchSize(); batchNo++){
+                int startIndex = batchNo * settings.getBatchSize();
+                int endIndex = startIndex + settings.getBatchSize();
+                //~for every batch looping every parameter
+
+                //Embedding matricies
+                for (i = 0; i < keyRange; i++){
+                    for (j = 0; j < d_keyEmbedding; j++){
+                        keyEmbeddingMatrix[i][j] = 0;
+                    }
+                }
+                for (i = 0; i < velocityRange; i++){
+                    for (j = 0; j < d_velocityEmbedding; j++){
+                        velocityEmbeddingMatrix[i][j] = 0;
+                    }
+                }
+
+                //Embedding aplhas
+                for (i = 0; i < d_prevNoteEmbedding; i++){
+                        prevNoteAlphas[i] = 0;
+                }
+                for (i = 0; i < d_nextNoteEmbedding; i++){
+                        nextNoteAlphas[i] = 0;
+                }
+                for (i = 0; i < d_absolutePosition; i++){
+                        absolutePosAlphas[i] = 0;
+                }
+
+                //Connecting layer
+                for (i = 0; i < d_connectingLayer; i++){
+                    for (j = 0; j < d_embedding; j++){
+                       connectingLayerWeights[0][i][j] = 0;
+                    }
+                }
+                for (i = 0; i < d_model; i++){
+                    for (j = 0; j < d_connectingLayer; j++){
+                        connectingLayerWeights[1][i][j] = 0;
+                    }
+                }
+
+                for (i = 0; i < d_connectingLayer; i++){
+                    connectingLayerBiases[i] = 0;
+                }
+
+                //FFN weights and biases
+                for (i = 0; i < layers; i++){
+                    for (j = 0; j < d_ffn; j++){
+                        for (k = 0; k < d_model; k++){
+                            ffnWeights[i][0][j][k] = 0;
+                        }
+                    }
+                    for (j = 0; j < d_model; j++){
+                        for (k = 0; k < d_ffn; k++){
+                            ffnWeights[i][1][j][k] = 0;
+                        }
+                    }
+                    for (j = 0; j < d_ffn; j++){
+                        ffnBiases[i][j] = 0;
+                    }
+                }
+
+                //Attention matricies
+                for (i = 0; i < layers; i++){
+                    for (j = 0; j < headsPerLayer; j++){
+                        for (k = 0; k < d_attention; k++){
+                            for (l = 0; l < d_model; l++){
+                                keyMatricies[i][j][k][l] = 0;
+                                quarryMatricies[i][j][k][l] = 0;
+                                valueUpMatricies[i][j][k][l] = 0;
+                                valueDownMatricies[i][j][k][l] = 0;
+                            }
+                        }
+                    }
+                }
+
+                //Unembedding
+                for (i = 0; i < keyRange + velocityRange + 3; i++){
+                    for (j = 0; j < d_prevNoteEmbedding; j++){
+                       unembeddingMatrix[i][j] = 0;
+                    }
+                }
             }
         }
     }
