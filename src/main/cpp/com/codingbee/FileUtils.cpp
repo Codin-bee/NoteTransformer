@@ -3,7 +3,6 @@
 
 #include <string>
 #include <dirent.h>
-#include <iostream>
 #include "Exception.h"
 
 using namespace std;
@@ -39,7 +38,7 @@ void FileUtils::registerTransformerToDestruct(NoteTransformer transformer){
 }
 
 void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int collums, int rows){
-    ofstream outFile(fileName);
+    ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
@@ -55,14 +54,11 @@ void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int
     }
 
     outFile.close();
-    if (!outFile.is_open()) {
-        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
-    }
 }
 
 
 void FileUtils::saveIntMatrixToFiles(std::string fileName, int** matrix, int collums, int rows){
-    ofstream outFile(fileName);
+    ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
@@ -78,15 +74,13 @@ void FileUtils::saveIntMatrixToFiles(std::string fileName, int** matrix, int col
     }
 
     outFile.close();
-    if (!outFile.is_open()) {
-        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
-    }
 }
 
 void FileUtils::saveFloatVectorToFiles(std::string fileName, float* vector, int rows){
-    ofstream outFile(fileName);
+    ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
+        cerr << "yep";
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
     }
 
@@ -97,13 +91,10 @@ void FileUtils::saveFloatVectorToFiles(std::string fileName, float* vector, int 
     }
 
     outFile.close();
-    if (!outFile.is_open()) {
-        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
-    }
 }
 
 float** FileUtils::readFloatMatrixFromFile(string fileName) {
-    ifstream inFile(fileName);
+    ifstream inFile(fileName + ".txt");
 
     if (!inFile.is_open()) {
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
@@ -124,16 +115,13 @@ float** FileUtils::readFloatMatrixFromFile(string fileName) {
     }
 
     inFile.close();
-    if (!inFile.is_open()) {
-        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
-    }
     return matrix;
 }
 
 
 int** FileUtils::readIntMatrixFromFile(string fileName) {
     int i;
-    ifstream inFile(fileName);
+    ifstream inFile(fileName + ".txt");
 
     if (!inFile.is_open()) {
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
@@ -154,14 +142,11 @@ int** FileUtils::readIntMatrixFromFile(string fileName) {
     }
 
     inFile.close();
-    if (!inFile.is_open()) {
-        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
-    }
     return matrix;
 }
 
 float* FileUtils::readFloatVectorFromFile(string fileName) {
-    ifstream inFile(fileName);
+    ifstream inFile(fileName + ".txt");
 
     if (!inFile.is_open()) {
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
@@ -176,8 +161,5 @@ float* FileUtils::readFloatVectorFromFile(string fileName) {
     }
 
     inFile.close();
-    if (!inFile.is_open()) {
-        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
-    }
     return vector;
 }
