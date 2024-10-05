@@ -38,7 +38,31 @@ void FileUtils::registerTransformerToDestruct(NoteTransformer transformer){
     transformers.push_back(transformer);
 }
 
-void FileUtils::saveMatrixToFiles(const string& fileName, float** matrix, int collums, int rows){
+void FileUtils::saveFloatMatrixToFiles(const string& fileName, float** matrix, int collums, int rows){
+    ofstream outFile(fileName);
+        
+    if (!outFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
+    }
+
+    outFile << collums << " " << rows;
+
+    for (int i = 0; i < collums; i++){
+        outFile << "\n";
+        for (int j = 0; j < rows; j++){
+            outFile << matrix[i][j] << " ";
+        }
+    }
+
+    outFile.close();
+    if (!outFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
+    }
+    cout << "success";
+}
+
+
+void FileUtils::saveIntMatrixToFiles(const string& fileName, int** matrix, int collums, int rows){
     ofstream outFile(fileName);
         
     if (!outFile.is_open()) {
