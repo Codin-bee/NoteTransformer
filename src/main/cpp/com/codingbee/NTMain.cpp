@@ -24,6 +24,7 @@ int main(){
     NoteTransformer transformer(128, 4, 2, 16, 16, 2, 2, 2, 64, 32, 64);
     //loadParameters(transformer);
     //train(transformer);
+    cout << "The model contains " << transformer.getNumberOfParameters() << " parameters \n";
     cout << "Training process has been finished." << "\n";
     cout << "Want to close this dialog?" << "\n";
     system("pause");

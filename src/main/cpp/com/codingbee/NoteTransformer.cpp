@@ -547,7 +547,6 @@ float NoteTransformer::calculateAverageCost(string dirPath, int startIndex, int 
     return sum / n;
 }
 
-
 void NoteTransformer::save(string dirPath){
         int i, j;
         string currentPath;
@@ -741,6 +740,26 @@ void NoteTransformer::init(string dirPath){
         unembeddingMatrix = FileUtils::readFloatMatrixFromFile(dirPath + "/unembedding");
     }
 
+int NoteTransformer::getNumberOfParameters(){
+    int params = 0;
+    //Embedding matricies
+    params += keyRange * d_keyEmbedding + velocityRange * d_velocityEmbedding;
+
+    //Embedding alphas
+    params += d_prevNoteEmbedding + d_nextNoteEmbedding + d_absolutePosition;
+
+    //Connecting
+    params += d_embedding * d_connectingLayer + d_connectingLayer * d_model + d_connectingLayer;
+
+    //FFN
+    params += layers * (d_model *d_ffn * 2 + d_ffn);
+
+    //Attention
+    params += layers * 4 * d_attention *d_model;
+
+    //Unembedding
+    params += d_model * (keyRange + velocityRange + 3);
+}
 
 NoteTransformer::~NoteTransformer(){
         delete[] prevNoteAlphas;

@@ -99,6 +99,8 @@ public:
 
     void train(TrainingSettings settings);
 
+    int getNumberOfParameters();
+
     private:
 
     void allocateModelMemory();
