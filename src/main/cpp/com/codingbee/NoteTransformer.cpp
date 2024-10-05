@@ -593,56 +593,55 @@ void NoteTransformer::randomInit(){
         allocateModelMemory();
         int i, j, k, l;
 
-        std::normal_distribution<float>;// distribution(0, 1);
         std::default_random_engine generator;
         float variation;
 
         //Embeding matricies
         variation = sqrt(6 / (keyRange * d_keyEmbedding));
-        std::normal_distribution<float> distribution(-variation, variation);
+        std::normal_distribution<float> distribution1(-variation, variation);
         for (i = 0; i < keyRange; i++){
             for (j = 0; j < d_keyEmbedding; j++){
-                keyEmbeddingMatrix[i][j] = distribution(generator);
+                keyEmbeddingMatrix[i][j] = distribution1(generator);
             }
         }
         variation = sqrt(6 / (velocityRange * d_velocityEmbedding));
-        std::normal_distribution<float> distribution(-variation, variation);
+        std::normal_distribution<float> distribution2(-variation, variation);
         for (i = 0; i < velocityRange; i++){
             for (j = 0; j < d_velocityEmbedding; j++){
-                velocityEmbeddingMatrix[i][j] = distribution(generator);
+                velocityEmbeddingMatrix[i][j] = distribution2(generator);
             }
         }
 
         //Embedding aplhas
         variation = sqrt(d_nextNoteEmbedding);
-        std::normal_distribution<float> distribution(-variation, variation);
+        std::normal_distribution<float> distribution3(-variation, variation);
         for (i = 0; i < d_prevNoteEmbedding; i++){
-            prevNoteAlphas[i] = distribution(generator);
+            prevNoteAlphas[i] = distribution3(generator);
         }
         variation = sqrt(d_prevNoteEmbedding);
-        std::normal_distribution<float> distribution(-variation, variation);
+        std::normal_distribution<float> distribution4(-variation, variation);
         for (i = 0; i < d_nextNoteEmbedding; i++){
-            nextNoteAlphas[i] = distribution(generator);
+            nextNoteAlphas[i] = distribution4(generator);
         }
         variation = sqrt(d_absolutePosition);
-        std::normal_distribution<float> distribution(-variation, variation);
+        std::normal_distribution<float> distribution5(-variation, variation);
         for (i = 0; i < d_absolutePosition; i++){
-            absolutePosAlphas[i] = distribution(generator);
+            absolutePosAlphas[i] = distribution5(generator);
         }
 
         //Connecting layer
         variation = sqrt(2 / d_embedding);
-        std::normal_distribution<float> distribution(0, variation);
+        std::normal_distribution<float> distribution6(0, variation);
         for (i = 0; i < d_connectingLayer; i++){
             for (j = 0; j < d_embedding; j++){
-                connectingLayerWeights[0][i][j] = distribution(generator);
+                connectingLayerWeights[0][i][j] = distribution6(generator);
             }
         }
         variation = sqrt(2 / d_connectingLayer);
-        std::normal_distribution<float> distribution(0, variation);
+        std::normal_distribution<float> distribution7(0, variation);
         for (i = 0; i < d_model; i++){
             for (j = 0; j < d_connectingLayer; j++){
-                connectingLayerWeights[1][i][j] = distribution(generator);
+                connectingLayerWeights[1][i][j] = distribution7(generator);
             }
         }
 
@@ -653,17 +652,17 @@ void NoteTransformer::randomInit(){
         //FFN weights and biases
         for (i = 0; i < layers; i++){
             variation = sqrt(2 / d_model);
-            std::normal_distribution<float> distribution(0, variation);
+            std::normal_distribution<float> distribution8(0, variation);
             for (j = 0; j < d_ffn; j++){
                 for (k = 0; k < d_model; k++){
-                    ffnWeights[i][0][j][k] = distribution(generator);
+                    ffnWeights[i][0][j][k] = distribution8(generator);
                 }
             }
             variation = sqrt(2 / d_ffn);
-            std::normal_distribution<float> distribution(0, variation);
+            std::normal_distribution<float> distribution9(0, variation);
             for (j = 0; j < d_model; j++){
                 for (k = 0; k < d_ffn; k++){
-                    ffnWeights[i][1][j][k] = distribution(generator);
+                    ffnWeights[i][1][j][k] = distribution9(generator);
                 }
             }
             for (j = 0; j < d_ffn; j++){
@@ -673,15 +672,15 @@ void NoteTransformer::randomInit(){
 
         //Attention matricies
         variation = sqrt(2 / d_model);
-        std::normal_distribution<float> distribution(0, variation);
+        std::normal_distribution<float> distribution10(0, variation);
         for (i = 0; i < layers; i++){
             for (j = 0; j < headsPerLayer; j++){
                 for (k = 0; k < d_attention; k++){
                     for (l = 0; l < d_model; l++){
-                        keyMatricies[i][j][k][l] = distribution(generator);
-                        quarryMatricies[i][j][k][l] = distribution(generator);
-                        valueUpMatricies[i][j][k][l] = distribution(generator);
-                        valueDownMatricies[i][j][k][l] = distribution(generator);
+                        keyMatricies[i][j][k][l] = distribution10(generator);
+                        quarryMatricies[i][j][k][l] = distribution10(generator);
+                        valueUpMatricies[i][j][k][l] = distribution10(generator);
+                        valueDownMatricies[i][j][k][l] = distribution10(generator);
                     }
                 }
             }
@@ -689,10 +688,10 @@ void NoteTransformer::randomInit(){
 
         //Unembedding
         variation = sqrt(6 / keyRange + velocityRange + 3);
-        std::normal_distribution<float> distribution(-variation, variation);
+        std::normal_distribution<float> distribution11(-variation, variation);
         for (i = 0; i < keyRange + velocityRange + 3; i++){
             for (j = 0; j < d_prevNoteEmbedding; j++){
-                unembeddingMatrix[i][j] = distribution(generator);
+                unembeddingMatrix[i][j] = distribution11(generator);
             }
         }
     }
