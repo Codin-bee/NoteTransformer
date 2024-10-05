@@ -45,3 +45,10 @@ void MathUtils::applySoftmax(float* vector, int vectorLength, int temperature){
             vector[i] = vector[i] / sum;
         }
     }
+
+float MathUtils::leakyReLU(float n){
+    if (n < 0){
+        return 0.03 * n;
+    }
+    return n;
+}

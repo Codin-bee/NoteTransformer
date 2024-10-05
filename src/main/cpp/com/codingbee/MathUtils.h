@@ -16,5 +16,7 @@ class MathUtils{
     /// @param vectorLength Length of the vector
     /// @param temperature The temperature variable for the function, if you do not know what you are doing keep it as 1
     static void applySoftmax(float* vector, int vectorLength, int temperature);
+
+    static float leakyReLU(float n);
 };
 #endif
