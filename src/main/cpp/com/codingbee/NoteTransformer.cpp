@@ -1,6 +1,8 @@
 #include "NoteTransformer.h"
 #include "FileUtils.h"
 #include <random>
+#include <filesystem>
+#include "Exception.h"
 
 using namespace std;
 
@@ -552,7 +554,7 @@ float NoteTransformer::calculateAverageCost(string dirPath, int startIndex, int 
 void NoteTransformer::save(string dirPath){
         int i, j;
         string currentPath;
-
+        try{
         //Embedding matricies
         FileUtils::saveFloatMatrixToFiles(dirPath + "/key_embedding", keyEmbeddingMatrix, keyRange, d_keyEmbedding);
         FileUtils::saveFloatMatrixToFiles(dirPath + "/velocity_embedding", velocityEmbeddingMatrix, velocityRange, d_velocityEmbedding);
@@ -563,14 +565,16 @@ void NoteTransformer::save(string dirPath){
         FileUtils::saveFloatVectorToFiles(dirPath + "/abs_pos_alphas", absolutePosAlphas, d_absolutePosition);
 
         //Connecting layer
-        currentPath = dirPath + "/connecting_layer";
-        FileUtils::saveFloatMatrixToFiles(currentPath + "/connection0", connectingLayerWeights[0], d_connectingLayer, d_embedding);
-        FileUtils::saveFloatMatrixToFiles(currentPath + "/connection1", connectingLayerWeights[1], d_embedding, d_connectingLayer);
-        FileUtils::saveFloatVectorToFiles(currentPath + "/biases", connectingLayerBiases, d_connectingLayer);
+        string currentPath = dirPath + "/connecting_layer/";
+        //std::filesystem::create_directory(currentPath);
+        FileUtils::saveFloatMatrixToFiles(currentPath + "connection0", connectingLayerWeights[0], d_connectingLayer, d_embedding);
+        FileUtils::saveFloatMatrixToFiles(currentPath + "connection1", connectingLayerWeights[1], d_embedding, d_connectingLayer);
+        FileUtils::saveFloatVectorToFiles(currentPath + "biases", connectingLayerBiases, d_connectingLayer);
 
         //FFN weights and biases
         for (i = 0; i < layers; i++){
             currentPath = dirPath + "/layers/layer" + to_string(i) + "/ffn_weights";
+            //std::filesystem::create_directories(currentPath);
             FileUtils::saveFloatMatrixToFiles(currentPath + "/connection0", ffnWeights[i][0], d_ffn, d_model);
             FileUtils::saveFloatMatrixToFiles(currentPath + "/connection1", ffnWeights[i][1], d_model, d_ffn);
         }
@@ -580,6 +584,7 @@ void NoteTransformer::save(string dirPath){
         for (i = 0; i < layers; i++){
             for (j = 0; j < headsPerLayer; j++){
                 currentPath = dirPath + "/layers/layer" + to_string(i) + "/attention/head" + to_string(j);
+                //std::filesystem::create_directories(currentPath);
                 FileUtils::saveFloatMatrixToFiles(currentPath + "keyMatrix", keyMatricies[i][j], d_attention, d_model);
                 FileUtils::saveFloatMatrixToFiles(currentPath + "quarryMatrix", quarryMatricies[i][j], d_attention, d_model);
                 FileUtils::saveFloatMatrixToFiles(currentPath + "valueDownMatrix", valueDownMatricies[i][j], d_attention, d_model);
@@ -589,6 +594,13 @@ void NoteTransformer::save(string dirPath){
 
         //Unembedding
         FileUtils::saveFloatMatrixToFiles(dirPath + "/unembedding", unembeddingMatrix, keyRange + velocityRange + 3, d_model);
+        }catch (Exception e){
+            cerr << e.getMessage() << "\n";
+        }catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+        
     }
 
 void NoteTransformer::randomInit(){
