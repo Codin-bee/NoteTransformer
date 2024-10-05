@@ -38,7 +38,7 @@ void FileUtils::registerTransformerToDestruct(NoteTransformer transformer){
     transformers.push_back(transformer);
 }
 
-void FileUtils::saveFloatMatrixToFiles(const string& fileName, float** matrix, int collums, int rows){
+void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int collums, int rows){
     ofstream outFile(fileName);
         
     if (!outFile.is_open()) {
@@ -62,7 +62,7 @@ void FileUtils::saveFloatMatrixToFiles(const string& fileName, float** matrix, i
 }
 
 
-void FileUtils::saveIntMatrixToFiles(const string& fileName, int** matrix, int collums, int rows){
+void FileUtils::saveIntMatrixToFiles(std::string fileName, int** matrix, int collums, int rows){
     ofstream outFile(fileName);
         
     if (!outFile.is_open()) {
@@ -76,6 +76,26 @@ void FileUtils::saveIntMatrixToFiles(const string& fileName, int** matrix, int c
         for (int j = 0; j < rows; j++){
             outFile << matrix[i][j] << " ";
         }
+    }
+
+    outFile.close();
+    if (!outFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
+    }
+    cout << "success";
+}
+
+void FileUtils::saveFloatVectorToFiles(std::string fileName, float* vector, int rows){
+    ofstream outFile(fileName);
+        
+    if (!outFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
+    }
+
+    outFile << rows << "\n";
+
+    for (int i = 0; i < rows; i++){
+            outFile << vector[i] << " ";
     }
 
     outFile.close();
@@ -141,4 +161,26 @@ int** FileUtils::readIntMatrixFromFile(string fileName) {
         throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
     }
     return matrix;
+}
+
+float* FileUtils::readFloatVectorFromFile(string fileName) {
+    ifstream inFile(fileName);
+
+    if (!inFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
+    }
+
+    int rows;
+    inFile >> rows;
+
+    float* vector = new float[rows];
+    for (int i = 0; i < rows; ++i) {
+        inFile >> vector[i];
+    }
+
+    inFile.close();
+    if (!inFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
+    }
+    return vector;
 }
