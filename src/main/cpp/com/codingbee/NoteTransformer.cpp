@@ -473,7 +473,7 @@ float NoteTransformer::calculateAverageCost(string dirPath, int startIndex, int 
 
 
 void NoteTransformer::save(string dirPath){
-        int i, j, k;
+        int i, j;
         string currentPath;
 
         //Embedding matricies
@@ -490,7 +490,6 @@ void NoteTransformer::save(string dirPath){
         FileUtils::saveFloatMatrixToFiles(currentPath + "/connection0", connectingLayerWeights[0], d_connectingLayer, d_embedding);
         FileUtils::saveFloatMatrixToFiles(currentPath + "/connection1", connectingLayerWeights[1], d_embedding, d_connectingLayer);
         FileUtils::saveFloatVectorToFiles(currentPath + "/biases", connectingLayerBiases, d_connectingLayer);
-
 
         //FFN weights and biases
         for (i = 0; i < layers; i++){
@@ -522,7 +521,45 @@ void NoteTransformer::randomInit(){
 
 void NoteTransformer::init(string dirPath){
         allocateModelMemory();
-        /*TODO: implement initialization from directory*/
+        int i, j;
+        string currentPath;
+
+        //Embedding matricies
+        keyEmbeddingMatrix = FileUtils::readFloatMatrixFromFile(dirPath + "/key_embedding");
+        velocityEmbeddingMatrix = FileUtils::readFloatMatrixFromFile(dirPath + "/velocity_embedding");
+
+        //Embedding alphas
+        prevNoteAlphas = FileUtils::readFloatVectorFromFile(dirPath + "/prev_note_alphas");
+        nextNoteAlphas = FileUtils::readFloatVectorFromFile(dirPath + "/next_note_alphas");
+        absolutePosAlphas = FileUtils::readFloatVectorFromFile(dirPath + "/abs_pos_alphas");
+
+        //Connecting layer
+        currentPath = dirPath + "/connecting_layer";
+        connectingLayerWeights[0] = FileUtils::readFloatMatrixFromFile(currentPath + "/connection0");
+        connectingLayerWeights[1] = FileUtils::readFloatMatrixFromFile(currentPath + "/connection1");
+        connectingLayerBiases = FileUtils::readFloatVectorFromFile(currentPath + "/biases");
+
+        //FFN weights and biases
+        for (i = 0; i < layers; i++){
+            currentPath = dirPath + "/layers/layer" + to_string(i) + "/ffn_weights";
+            ffnWeights[i][0] = FileUtils::readFloatMatrixFromFile(currentPath + "/connection0");
+            ffnWeights[i][1] = FileUtils::readFloatMatrixFromFile(currentPath + "/connection1");
+        }
+        ffnBiases = FileUtils::readFloatMatrixFromFile(dirPath + "/ffn_biases");
+
+        //Attention matricies
+        for (i = 0; i < layers; i++){
+            for (j = 0; j < headsPerLayer; j++){
+                currentPath = dirPath + "/layers/layer" + to_string(i) + "/attention/head" + to_string(j);
+                keyMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "keyMatrix");
+                quarryMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "quarryMatrix");
+                valueDownMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "valueDownMatrix");
+                valueUpMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "valueUpMatrix");
+            }
+        }
+
+        //Unembedding
+        unembeddingMatrix = FileUtils::readFloatMatrixFromFile(dirPath + "/unembedding");
     }
 
 
