@@ -39,7 +39,7 @@ private:
     float*** connectingLayerWeights;
     float* connectingLayerBiases;
 
-    //FNN weights and biases
+    //FFN weights and biases
     float**** ffnWeights;
     float** ffnBiases;
 

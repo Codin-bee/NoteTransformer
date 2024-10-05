@@ -58,7 +58,6 @@ void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int
     if (!outFile.is_open()) {
         throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
     }
-    cout << "success";
 }
 
 
@@ -82,7 +81,6 @@ void FileUtils::saveIntMatrixToFiles(std::string fileName, int** matrix, int col
     if (!outFile.is_open()) {
         throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
     }
-    cout << "success";
 }
 
 void FileUtils::saveFloatVectorToFiles(std::string fileName, float* vector, int rows){
@@ -102,7 +100,6 @@ void FileUtils::saveFloatVectorToFiles(std::string fileName, float* vector, int 
     if (!outFile.is_open()) {
         throw Exception("The file " + fileName + " could not been closed", ExceptionType::FILE_HANDLEING);
     }
-    cout << "success";
 }
 
 float** FileUtils::readFloatMatrixFromFile(string fileName) {
