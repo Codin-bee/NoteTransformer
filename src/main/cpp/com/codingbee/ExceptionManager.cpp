@@ -3,14 +3,13 @@
 #include <string>
 #include <iostream>
 #include <unistd.h>
-#include <mingw-w64-headers/crt/unistd.h>
 
 using namespace std;
 
-boolean ExceptionManager::terminationOverride = false;
+bool ExceptionManager::terminationOverride = false;
 long ExceptionManager::terminationDelay = 5000;
 
-void ExceptionManager::processException(string message, boolean shouldTerminate){
+void ExceptionManager::processException(string message, bool shouldTerminate){
     cerr << "Exception occured: " << message << "\n";
     if (shouldTerminate && !terminationOverride){
         cerr << "Program will be terminated and all memory will be free after the delay: " << terminationDelay << "ms \n";

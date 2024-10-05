@@ -2,13 +2,12 @@
 #define EXCEPTIONMANAGER_H
 
 #include <string>
-#include <rpcndr.h>
 
 class ExceptionManager{
     public:
-    static void processException(std::string message, boolean shouldTerminate);
+    static void processException(std::string message, bool shouldTerminate);
     private:
-    static boolean terminationOverride;
+    static bool terminationOverride;
     static long terminationDelay;
 };
 #endif
