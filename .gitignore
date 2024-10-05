@@ -8,3 +8,5 @@ src/main/cpp/com/codingbee/.vscode/launch.json
 /.vscode/tasks.json
 .vscode/launch.json
 /MLProject.code-workspace
+/src/main/cpp/com/codingbee/output
+src/main/cpp/com/codingbee/output/One1.exe
