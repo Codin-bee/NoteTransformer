@@ -368,6 +368,7 @@ void NoteTransformer::allocateModelMemory(){
         absolutePosAlphas = new float[d_absolutePosition];
 
         //Connecting layer
+        connectingLayerWeights = new float**[2];
         connectingLayerWeights[0] = new float*[d_connectingLayer];
         for (i = 0; i < d_connectingLayer; i++){
                 connectingLayerWeights[0][i] = new float[d_embedding];
@@ -382,6 +383,7 @@ void NoteTransformer::allocateModelMemory(){
         ffnWeights = new float***[layers];
         ffnBiases = new float*[layers];
         for (i = 0; i < layers; i++){
+            ffnWeights[i] = new float**[2];
             ffnWeights[i][0] = new float*[d_ffn];
             for (j = 0; j < d_ffn; j++){
                 ffnWeights[i][0][j] = new float[d_model];
@@ -758,88 +760,84 @@ int NoteTransformer::getNumberOfParameters(){
 
     //Unembedding
     params += d_model * (keyRange + velocityRange + 3);
+    return params;
 }
 
-NoteTransformer::~NoteTransformer(){
-        delete[] prevNoteAlphas;
-        delete[] nextNoteAlphas;
-        delete[] absolutePosAlphas;
-        delete[] connectingLayerBiases;
-        
-        int i, j, k;
-        for (i = 0; i < contextSize; i++)
-        {
-            delete[] keyEmbeddingMatrix[i];
-            delete[] velocityEmbeddingMatrix[i];
-        }
-        
-        for (i = 0; i < d_connectingLayer; i++)
-        {
-            delete[] connectingLayerWeights[0][i];
-        }
-        delete[] connectingLayerWeights[0];
+NoteTransformer::~NoteTransformer() {
+    int i, j, k; 
+    delete[] prevNoteAlphas;
+    delete[] nextNoteAlphas;
+    delete[] absolutePosAlphas;
+    delete[] connectingLayerBiases;
 
-        for (i = 0; i < d_model; i++)
-        {
-            delete[] connectingLayerWeights[1][i];
-        }
-        delete[] connectingLayerWeights[1];
-
-        for (i = 0; i < layers; i++)
-        {
-            for (j = 0; j < contextSize; j++){
-                delete[] ffnBiases[i];
-
-                for (k = 0; k < d_ffn; k++){
-                    delete[] ffnWeights[i][0][k];
-                }
-
-                for (k = 0; k < d_model; k++){
-                    delete[] ffnWeights[i][1][k];
-                }
-
-                delete[] ffnWeights[i][j][0];
-                delete[] ffnWeights[i][j][1];
-                delete[] ffnWeights[i][j];
-            }
-            delete[] ffnWeights[i];
-
-            for (j = 0; j < headsPerLayer; j++){
-                for (k =0; k < d_model; k++){
-                    delete[] quarryMatricies[i][j][k];
-                    delete[] keyMatricies[i][j][k];
-                    delete[] valueDownMatricies[i][j][k];
-                }
-
-                for (k =0; k < d_attention; k++){
-                    delete[] valueUpMatricies[i][j][k];
-                }
-
-                quarryMatricies[i][j];
-                keyMatricies[i][j];
-                valueUpMatricies[i][j];
-                valueDownMatricies[i][j];
-            }
-
-            quarryMatricies[i];
-            keyMatricies[i];
-            valueUpMatricies[i];
-            valueDownMatricies[i];
-            
-        }
-
-        for (i = 0; i < d_model; i++){
-            delete[] unembeddingMatrix[i];
-        }
-
-        delete[] ffnBiases;
-        delete[] ffnWeights;
-        delete[] connectingLayerWeights;
-        delete[] keyEmbeddingMatrix;
-        delete[] velocityEmbeddingMatrix;
-        delete[] quarryMatricies;
-        delete[] keyMatricies;
-        delete[] valueUpMatricies;
-        delete[] valueDownMatricies;
-        delete[] unembeddingMatrix;
+    //Embedding matricies
+    for (i = 0; i < keyRange; i++) {
+        delete[] keyEmbeddingMatrix[i];
     }
+    delete[] keyEmbeddingMatrix;
+
+    for (i = 0; i < velocityRange; i++) {
+        delete[] velocityEmbeddingMatrix[i];
+    }
+    delete[] velocityEmbeddingMatrix;
+
+    //Connecting layer
+    for (i = 0; i < d_connectingLayer; i++) {
+        delete[] connectingLayerWeights[0][i];
+    }
+    delete[] connectingLayerWeights[0];
+
+    for (i = 0; i < d_model; i++) {
+        delete[] connectingLayerWeights[1][i];
+    }
+    delete[] connectingLayerWeights[1];
+    delete[] connectingLayerWeights;
+
+    //FFN weights and biases
+    for (i = 0; i < layers; i++) {
+        for (k = 0; k < d_ffn; k++) {
+            delete[] ffnWeights[i][0][k];
+        }
+        delete[] ffnWeights[i][0];
+        for (k = 0; k < d_model; k++) {
+            delete[] ffnWeights[i][1][k];
+        }
+        delete[] ffnWeights[i][1];
+        delete[] ffnBiases[i];
+        delete[] ffnWeights[i];
+    }
+    delete[] ffnWeights;
+    delete[] ffnBiases;
+
+    //Attention matricies
+    for (i = 0; i < layers; i++) {
+        for (j = 0; j < headsPerLayer; j++) {
+            for (k = 0; k < d_attention; k++) {
+                delete[] quarryMatricies[i][j][k];
+                delete[] keyMatricies[i][j][k];
+                delete[] valueDownMatricies[i][j][k];
+                delete[] valueUpMatricies[i][j][k];
+            }
+
+            delete[] quarryMatricies[i][j];
+            delete[] keyMatricies[i][j];
+            delete[] valueUpMatricies[i][j];
+            delete[] valueDownMatricies[i][j];
+        }
+
+        delete[] quarryMatricies[i];
+        delete[] keyMatricies[i];
+        delete[] valueUpMatricies[i];
+        delete[] valueDownMatricies[i];
+    }
+    delete[] quarryMatricies;
+    delete[] keyMatricies;
+    delete[] valueUpMatricies;
+    delete[] valueDownMatricies;
+
+    //Unembedding
+    for (i = 0; i < keyRange + velocityRange + 3; i++) {
+        delete[] unembeddingMatrix[i];
+    }
+    delete[] unembeddingMatrix;
+}
