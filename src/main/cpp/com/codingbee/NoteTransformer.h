@@ -100,10 +100,10 @@ public:
     void train(TrainingSettings settings);
 
     int getNumberOfParameters();
+    
+    void allocateModelMemory();
 
     private:
-
-    void allocateModelMemory();
 
     void connectLayer(float* originalVector, float* downscaledVector);
 
