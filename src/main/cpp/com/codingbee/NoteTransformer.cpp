@@ -1,5 +1,6 @@
 #include "NoteTransformer.h"
 #include "FileUtils.h"
+#include <random>
 
 using namespace std;
 
@@ -296,8 +297,10 @@ void NoteTransformer::ffn(float* vector, int layer){
             {
                 neuronValue += originalVector[i] * ffnWeights[layer][0][j][i];
             }
-            hiddenVector[i] = neuronValue + ffnBiases[layer][i];
+            hiddenVector[i] = MathUtils::leakyReLU(neuronValue + ffnBiases[layer][i]);
         }
+
+
 
         delete[] originalVector;
 
@@ -589,7 +592,110 @@ void NoteTransformer::save(string dirPath){
 
 void NoteTransformer::randomInit(){
         allocateModelMemory();
-         /*TODO: Implement initialization using random generated values*/
+        int i, j, k, l;
+
+        std::normal_distribution<float>;// distribution(0, 1);
+        std::default_random_engine generator;
+        float variation;
+
+        //Embeding matricies
+        variation = sqrt(6 / (keyRange * d_keyEmbedding));
+        std::normal_distribution<float> distribution(-variation, variation);
+        for (i = 0; i < keyRange; i++){
+            for (j = 0; j < d_keyEmbedding; j++){
+                keyEmbeddingMatrix[i][j] = distribution(generator);
+            }
+        }
+        variation = sqrt(6 / (velocityRange * d_velocityEmbedding));
+        std::normal_distribution<float> distribution(-variation, variation);
+        for (i = 0; i < velocityRange; i++){
+            for (j = 0; j < d_velocityEmbedding; j++){
+                velocityEmbeddingMatrix[i][j] = distribution(generator);
+            }
+        }
+
+        //Embedding aplhas
+        variation = sqrt(d_nextNoteEmbedding);
+        std::normal_distribution<float> distribution(-variation, variation);
+        for (i = 0; i < d_prevNoteEmbedding; i++){
+            prevNoteAlphas[i] = distribution(generator);
+        }
+        variation = sqrt(d_prevNoteEmbedding);
+        std::normal_distribution<float> distribution(-variation, variation);
+        for (i = 0; i < d_nextNoteEmbedding; i++){
+            nextNoteAlphas[i] = distribution(generator);
+        }
+        variation = sqrt(d_absolutePosition);
+        std::normal_distribution<float> distribution(-variation, variation);
+        for (i = 0; i < d_absolutePosition; i++){
+            absolutePosAlphas[i] = distribution(generator);
+        }
+
+        //Connecting layer
+        variation = sqrt(2 / d_embedding);
+        std::normal_distribution<float> distribution(0, variation);
+        for (i = 0; i < d_connectingLayer; i++){
+            for (j = 0; j < d_embedding; j++){
+                connectingLayerWeights[0][i][j] = distribution(generator);
+            }
+        }
+        variation = sqrt(2 / d_connectingLayer);
+        std::normal_distribution<float> distribution(0, variation);
+        for (i = 0; i < d_model; i++){
+            for (j = 0; j < d_connectingLayer; j++){
+                connectingLayerWeights[1][i][j] = distribution(generator);
+            }
+        }
+
+        for (i = 0; i < d_connectingLayer; i++){
+            connectingLayerBiases[i] = 0;
+        }
+
+        //FFN weights and biases
+        for (i = 0; i < layers; i++){
+            variation = sqrt(2 / d_model);
+            std::normal_distribution<float> distribution(0, variation);
+            for (j = 0; j < d_ffn; j++){
+                for (k = 0; k < d_model; k++){
+                    ffnWeights[i][0][j][k] = distribution(generator);
+                }
+            }
+            variation = sqrt(2 / d_ffn);
+            std::normal_distribution<float> distribution(0, variation);
+            for (j = 0; j < d_model; j++){
+                for (k = 0; k < d_ffn; k++){
+                    ffnWeights[i][1][j][k] = distribution(generator);
+                }
+            }
+            for (j = 0; j < d_ffn; j++){
+                ffnBiases[i][j] = 0;
+            }
+        }
+
+        //Attention matricies
+        variation = sqrt(2 / d_model);
+        std::normal_distribution<float> distribution(0, variation);
+        for (i = 0; i < layers; i++){
+            for (j = 0; j < headsPerLayer; j++){
+                for (k = 0; k < d_attention; k++){
+                    for (l = 0; l < d_model; l++){
+                        keyMatricies[i][j][k][l] = distribution(generator);
+                        quarryMatricies[i][j][k][l] = distribution(generator);
+                        valueUpMatricies[i][j][k][l] = distribution(generator);
+                        valueDownMatricies[i][j][k][l] = distribution(generator);
+                    }
+                }
+            }
+        }
+
+        //Unembedding
+        variation = sqrt(6 / keyRange + velocityRange + 3);
+        std::normal_distribution<float> distribution(-variation, variation);
+        for (i = 0; i < keyRange + velocityRange + 3; i++){
+            for (j = 0; j < d_prevNoteEmbedding; j++){
+                unembeddingMatrix[i][j] = distribution(generator);
+            }
+        }
     }
 
 void NoteTransformer::init(string dirPath){
