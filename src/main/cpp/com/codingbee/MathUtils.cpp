@@ -26,29 +26,37 @@ float** MathUtils::multiplySameSquareMatricies(float** matrixA, float** matrixB,
 }
 
 void MathUtils::applySoftmax(float* vector, int vectorLength, int temperature){
-        if(vectorLength < 1){
-            throw Exception("The vector length has to be higher than 0", ExceptionType::INVALID_ARGUMENT);
-        }
-        if(temperature <=0){
-            throw Exception("Softmax temperature has to be higher than 0", ExceptionType::INVALID_ARGUMENT);
-        }
-        if(vector==nullptr){
-            throw Exception("The vector can not be null pointer", ExceptionType::INVALID_ARGUMENT);
-        }
-        float sum = 0;
-        int i;
-        for (i = 0; i < vectorLength; i++){
-            vector[i] = exp(vector[i] / temperature);
-            sum += vector[i];
-        }
-        for (i = 0; i < vectorLength; i++){
-            vector[i] = vector[i] / sum;
+    if(vectorLength < 1){
+        throw Exception("The vector length has to be higher than 0", ExceptionType::INVALID_ARGUMENT);
+    }
+    if(temperature <= 0){
+        throw Exception("Softmax temperature has to be higher than 0", ExceptionType::INVALID_ARGUMENT);
+    }
+    if(vector == nullptr){
+        throw Exception("The vector cannot be a null pointer", ExceptionType::INVALID_ARGUMENT);
+    }
+
+    float maxVal = vector[0];
+    for (int i = 1; i < vectorLength; i++) {
+        if (vector[i] > maxVal) {
+            maxVal = vector[i];
         }
     }
 
+    float sum = 0;
+    for (int i = 0; i < vectorLength; i++) {
+        vector[i] = exp((vector[i] - maxVal) / temperature);
+        sum += vector[i];
+    }
+    for (int i = 0; i < vectorLength; i++) {
+        vector[i] = vector[i] / sum;
+    }
+}
+
+
 float MathUtils::leakyReLU(float n){
     if (n < 0){
-        return 0.03 * n;
+        return 0.01 * n;
     }
     return n;
 }
