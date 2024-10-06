@@ -9,6 +9,9 @@ class TrainingSettings{
     int epochs;
     float learningRate;
     float softmaxTemperature;
+    float beta_1;
+    float beta_2;
+    float epsilon;
     string dataPath;
     int batchSize;
 
@@ -21,6 +24,15 @@ class TrainingSettings{
     
     float getSoftmaxTemperature(){return softmaxTemperature;}
     void setSoftmaxTemperature(float temperature);
+
+    float getBeta_1(){return beta_1;}
+    void setBeta_1(float beta);
+
+    float getBeta_2(){return beta_2;}
+    void setBeta_2(float beta);
+    
+    float getEpsilon(){return epsilon;}
+    void setEpsilon(float epsilon);
 
     string getDataPath(){return dataPath;}
     void setDataPath(string path);

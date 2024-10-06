@@ -19,6 +19,18 @@ void TrainingSettings::setSoftmaxTemperature(float temperature){
     softmaxTemperature = temperature;
 }
 
+void TrainingSettings::setBeta_1(float beta){
+    beta_1 = beta;
+}
+
+void TrainingSettings::setBeta_2(float beta){
+    beta_2 = beta;
+}
+
+void TrainingSettings::setEpsilon(float eps){
+    epsilon = eps;
+}
+
 void TrainingSettings::setDataPath(string path){
     if (path.empty()){
         throw Exception("The path to data can not be empty", ExceptionType::INVALID_ARGUMENT);
