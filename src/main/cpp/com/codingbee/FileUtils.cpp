@@ -80,7 +80,6 @@ void FileUtils::saveFloatVectorToFiles(std::string fileName, float* vector, int 
     ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
-        cerr << "yep";
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
     }
 
