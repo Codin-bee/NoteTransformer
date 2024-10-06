@@ -432,7 +432,10 @@ void NoteTransformer::allocateModelMemory(){
 
 void NoteTransformer::train(TrainingSettings settings){
         int i, j, k, l;
+        float g, m_hat, v_hat, time;
+        float beta_1, beta_2, beta_3 = 1 - beta_1, beta_4 = 1 - beta_2, alpha = settings.getLearningRate(), epsilon;
         for (int epoch = 0; epoch < settings.getEpochs(); epoch++){
+            time = epoch + 1;
             for(int batchNo = 0; batchNo < FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / settings.getBatchSize(); batchNo++){
                 int startIndex = batchNo * settings.getBatchSize();
                 int endIndex = startIndex + settings.getBatchSize();
@@ -441,7 +444,12 @@ void NoteTransformer::train(TrainingSettings settings){
                 //Embedding matricies
                 for (i = 0; i < keyRange; i++){
                     for (j = 0; j < d_keyEmbedding; j++){
-                        keyEmbeddingMatrix[i][j] = 0;
+                        g = calculateGradientWithRespectTo(keyEmbeddingMatrix[i], j, settings, startIndex, endIndex);
+                        float M = beta_1 * M + beta_3 * g;
+                        float V = beta_2 * V + beta_4 * pow(g, 2);
+                        m_hat = 0 / (1 - pow(beta_1, time));
+                        v_hat = 0 / (1 - pow(beta_2, time));
+                        keyEmbeddingMatrix[i][j] = keyEmbeddingMatrix[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
                 for (i = 0; i < velocityRange; i++){
@@ -540,6 +548,16 @@ float NoteTransformer::calculateCost(int** input, float** expectedOutput){
     return cost;
 }
 
+float NoteTransformer::calculateGradientWithRespectTo(float* array, int index, TrainingSettings settings, int startIndex, int endIndex){
+    float nudge = 0.000001;
+    float originalWeight = array[index];
+    array[index] = originalWeight + nudge;
+    float costHigher = calculateAverageCost(settings.getDataPath(), startIndex, endIndex);
+    array[index] = originalWeight + nudge;
+    float costLower = calculateAverageCost(settings.getDataPath(), startIndex, endIndex);
+    array[index] = originalWeight;
+    return (float) (costHigher - costLower) / (float) (2.0f * nudge);
+}
 float NoteTransformer::calculateAverageCost(string dirPath, int startIndex, int endIndex){
     float sum = 0;
     int n = 0;
@@ -738,10 +756,10 @@ void NoteTransformer::init(string dirPath){
         for (i = 0; i < layers; i++){
             for (j = 0; j < headsPerLayer; j++){
                 currentPath = dirPath + "/layers/layer" + to_string(i) + "/attention/head" + to_string(j);
-                keyMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "keyMatrix");
-                quarryMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "quarryMatrix");
-                valueDownMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "valueDownMatrix");
-                valueUpMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "valueUpMatrix");
+                keyMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "/keyMatrix");
+                quarryMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "/quarryMatrix");
+                valueDownMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "/valueDownMatrix");
+                valueUpMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "/valueUpMatrix");
             }
         }
 

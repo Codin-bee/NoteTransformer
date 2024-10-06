@@ -125,6 +125,8 @@ public:
     /// @param tokeNo index of the vector in the processed matrix
     void addChanges(float* vector, float*** changes, int tokenNo);
 
+    float calculateGradientWithRespectTo(float* array, int index, TrainingSettings settings, int startIndex, int endIndex);
+
     //Getters and setters
     public :
 
