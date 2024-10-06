@@ -553,45 +553,41 @@ float NoteTransformer::calculateAverageCost(string dirPath, int startIndex, int 
 
 void NoteTransformer::save(string dirPath){
         int i, j;
-        string currentPath;
+        string currentPath = dirPath;
         try{
+        std::filesystem::create_directories(dirPath);
         //Embedding matricies
         FileUtils::saveFloatMatrixToFiles(dirPath + "/key_embedding", keyEmbeddingMatrix, keyRange, d_keyEmbedding);
         FileUtils::saveFloatMatrixToFiles(dirPath + "/velocity_embedding", velocityEmbeddingMatrix, velocityRange, d_velocityEmbedding);
-
         //Embedding alphas
         FileUtils::saveFloatVectorToFiles(dirPath + "/prev_note_alphas", prevNoteAlphas, d_prevNoteEmbedding);
         FileUtils::saveFloatVectorToFiles(dirPath + "/next_note_alphas", nextNoteAlphas, d_nextNoteEmbedding);
         FileUtils::saveFloatVectorToFiles(dirPath + "/abs_pos_alphas", absolutePosAlphas, d_absolutePosition);
-
         //Connecting layer
-        string currentPath = dirPath + "/connecting_layer/";
-        //std::filesystem::create_directory(currentPath);
-        FileUtils::saveFloatMatrixToFiles(currentPath + "connection0", connectingLayerWeights[0], d_connectingLayer, d_embedding);
-        FileUtils::saveFloatMatrixToFiles(currentPath + "connection1", connectingLayerWeights[1], d_embedding, d_connectingLayer);
-        FileUtils::saveFloatVectorToFiles(currentPath + "biases", connectingLayerBiases, d_connectingLayer);
-
+        string currentPath = dirPath + "/connecting_layer";
+        std::filesystem::create_directory(currentPath);
+        FileUtils::saveFloatMatrixToFiles(currentPath + "/connection0", connectingLayerWeights[0], d_connectingLayer, d_embedding);
+        FileUtils::saveFloatMatrixToFiles(currentPath + "/connection1", connectingLayerWeights[1], d_model, d_connectingLayer);
+        FileUtils::saveFloatVectorToFiles(currentPath + "/biases", connectingLayerBiases, d_connectingLayer);
         //FFN weights and biases
         for (i = 0; i < layers; i++){
             currentPath = dirPath + "/layers/layer" + to_string(i) + "/ffn_weights";
-            //std::filesystem::create_directories(currentPath);
+            std::filesystem::create_directories(currentPath);
             FileUtils::saveFloatMatrixToFiles(currentPath + "/connection0", ffnWeights[i][0], d_ffn, d_model);
             FileUtils::saveFloatMatrixToFiles(currentPath + "/connection1", ffnWeights[i][1], d_model, d_ffn);
         }
-        FileUtils::saveFloatMatrixToFiles(dirPath + "/ffn_biases", ffnBiases, layers, d_attention);
-
+        FileUtils::saveFloatMatrixToFiles(dirPath + "/ffn_biases", ffnBiases, layers, d_ffn);
         //Attention matricies
         for (i = 0; i < layers; i++){
             for (j = 0; j < headsPerLayer; j++){
                 currentPath = dirPath + "/layers/layer" + to_string(i) + "/attention/head" + to_string(j);
-                //std::filesystem::create_directories(currentPath);
-                FileUtils::saveFloatMatrixToFiles(currentPath + "keyMatrix", keyMatricies[i][j], d_attention, d_model);
-                FileUtils::saveFloatMatrixToFiles(currentPath + "quarryMatrix", quarryMatricies[i][j], d_attention, d_model);
-                FileUtils::saveFloatMatrixToFiles(currentPath + "valueDownMatrix", valueDownMatricies[i][j], d_attention, d_model);
-                FileUtils::saveFloatMatrixToFiles(currentPath + "ValueUpMatrix", valueUpMatricies[i][j], d_attention, d_model);
+                std::filesystem::create_directories(currentPath);
+                FileUtils::saveFloatMatrixToFiles(currentPath + "/keyMatrix", keyMatricies[i][j], d_attention, d_model);
+                FileUtils::saveFloatMatrixToFiles(currentPath + "/quarryMatrix", quarryMatricies[i][j], d_attention, d_model);
+                FileUtils::saveFloatMatrixToFiles(currentPath + "/valueDownMatrix", valueDownMatricies[i][j], d_attention, d_model);
+                FileUtils::saveFloatMatrixToFiles(currentPath + "/ValueUpMatrix", valueUpMatricies[i][j], d_attention, d_model);
             }
         }
-
         //Unembedding
         FileUtils::saveFloatMatrixToFiles(dirPath + "/unembedding", unembeddingMatrix, keyRange + velocityRange + 3, d_model);
         }catch (Exception e){
@@ -611,14 +607,14 @@ void NoteTransformer::randomInit(){
         float variation;
 
         //Embeding matricies
-        variation = sqrt(6 / (keyRange * d_keyEmbedding));
+        variation = sqrt(6.0f / ((float)keyRange * (float)d_keyEmbedding));
         std::normal_distribution<float> distribution1(-variation, variation);
         for (i = 0; i < keyRange; i++){
             for (j = 0; j < d_keyEmbedding; j++){
                 keyEmbeddingMatrix[i][j] = distribution1(generator);
             }
         }
-        variation = sqrt(6 / (velocityRange * d_velocityEmbedding));
+        variation = sqrt(6.0f / ((float)velocityRange * (float)d_velocityEmbedding));
         std::normal_distribution<float> distribution2(-variation, variation);
         for (i = 0; i < velocityRange; i++){
             for (j = 0; j < d_velocityEmbedding; j++){
@@ -627,31 +623,31 @@ void NoteTransformer::randomInit(){
         }
 
         //Embedding aplhas
-        variation = sqrt(d_nextNoteEmbedding);
+        variation = sqrt((float)d_nextNoteEmbedding);
         std::normal_distribution<float> distribution3(-variation, variation);
         for (i = 0; i < d_prevNoteEmbedding; i++){
             prevNoteAlphas[i] = distribution3(generator);
         }
-        variation = sqrt(d_prevNoteEmbedding);
+        variation = sqrt((float)d_prevNoteEmbedding);
         std::normal_distribution<float> distribution4(-variation, variation);
         for (i = 0; i < d_nextNoteEmbedding; i++){
             nextNoteAlphas[i] = distribution4(generator);
         }
-        variation = sqrt(d_absolutePosition);
+        variation = sqrt((float)d_absolutePosition);
         std::normal_distribution<float> distribution5(-variation, variation);
         for (i = 0; i < d_absolutePosition; i++){
             absolutePosAlphas[i] = distribution5(generator);
         }
 
         //Connecting layer
-        variation = sqrt(2 / d_embedding);
+        variation = sqrt(2.0f / (float)d_embedding);
         std::normal_distribution<float> distribution6(0, variation);
         for (i = 0; i < d_connectingLayer; i++){
             for (j = 0; j < d_embedding; j++){
                 connectingLayerWeights[0][i][j] = distribution6(generator);
             }
         }
-        variation = sqrt(2 / d_connectingLayer);
+        variation = sqrt(2.0f / (float)d_connectingLayer);
         std::normal_distribution<float> distribution7(0, variation);
         for (i = 0; i < d_model; i++){
             for (j = 0; j < d_connectingLayer; j++){
@@ -665,14 +661,14 @@ void NoteTransformer::randomInit(){
 
         //FFN weights and biases
         for (i = 0; i < layers; i++){
-            variation = sqrt(2 / d_model);
+            variation = sqrt(2.0f / (float)d_model);
             std::normal_distribution<float> distribution8(0, variation);
             for (j = 0; j < d_ffn; j++){
                 for (k = 0; k < d_model; k++){
                     ffnWeights[i][0][j][k] = distribution8(generator);
                 }
             }
-            variation = sqrt(2 / d_ffn);
+            variation = sqrt(2.0f / (float)d_ffn);
             std::normal_distribution<float> distribution9(0, variation);
             for (j = 0; j < d_model; j++){
                 for (k = 0; k < d_ffn; k++){
@@ -685,7 +681,7 @@ void NoteTransformer::randomInit(){
         }
 
         //Attention matricies
-        variation = sqrt(2 / d_model);
+        variation = sqrt(2.0f / (float)d_model);
         std::normal_distribution<float> distribution10(0, variation);
         for (i = 0; i < layers; i++){
             for (j = 0; j < headsPerLayer; j++){
@@ -701,10 +697,10 @@ void NoteTransformer::randomInit(){
         }
 
         //Unembedding
-        variation = sqrt(6 / keyRange + velocityRange + 3);
+        variation = sqrt(6.0f /(float)keyRange + (float)velocityRange + 3.0f);
         std::normal_distribution<float> distribution11(-variation, variation);
         for (i = 0; i < keyRange + velocityRange + 3; i++){
-            for (j = 0; j < d_prevNoteEmbedding; j++){
+            for (j = 0; j < d_model; j++){
                 unembeddingMatrix[i][j] = distribution11(generator);
             }
         }
