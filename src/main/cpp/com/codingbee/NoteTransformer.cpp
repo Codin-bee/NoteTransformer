@@ -433,72 +433,303 @@ void NoteTransformer::allocateModelMemory(){
 void NoteTransformer::train(TrainingSettings settings){
         int i, j, k, l;
         float g, m_hat, v_hat, time;
-        float beta_1, beta_2, beta_3 = 1 - beta_1, beta_4 = 1 - beta_2, alpha = settings.getLearningRate(), epsilon;
+        float beta_1 = settings.getBeta_1(), beta_2 =  settings.getBeta_2(), beta_3 = 1 - beta_1, beta_4 = 1 - beta_2, alpha = settings.getLearningRate(), epsilon = settings.getEpsilon();
+
+#pragma region  Allocation
+        //Embedding matricies
+        float** m_keyEmbedding = new float*[keyRange];
+        float** v_keyEmbedding = new float*[keyRange];
+        for (i = 0; i < keyRange; i++){
+            m_keyEmbedding[i] = new float[d_keyEmbedding];
+            v_keyEmbedding[i] = new float[d_keyEmbedding];
+            for (j = 0; j < d_keyEmbedding; j++){
+                m_keyEmbedding[i][j] = 0;
+                v_keyEmbedding[i][j] = 0;
+            }
+        }
+        
+        float** m_velocityEmbedding = new float*[velocityRange];
+        float** v_velocityEmbedding = new float*[velocityRange];
+        for (i = 0; i < keyRange; i++){
+            m_velocityEmbedding[i] = new float[d_velocityEmbedding];
+            v_velocityEmbedding[i] = new float[d_velocityEmbedding];
+            for (j = 0; j < d_velocityEmbedding; j++){
+                m_velocityEmbedding[i][j] = 0;
+                v_velocityEmbedding[i][j] = 0;
+            }
+        }
+
+        //Embedding aplhas
+        float* m_prevNoteAlpha = new float[d_prevNoteEmbedding];
+        float* v_prevNoteAlpha = new float[d_prevNoteEmbedding];
+        for (i = 0; i < d_prevNoteEmbedding; i++){
+            m_prevNoteAlpha[i] = 0;
+            v_prevNoteAlpha[i] = 0;
+        } 
+
+        float* m_nextNoteAlpha = new float[d_nextNoteEmbedding];
+        float* v_nextNoteAlpha = new float[d_nextNoteEmbedding];
+        for (i = 0; i < d_nextNoteEmbedding; i++){
+            m_nextNoteAlpha[i] = 0;
+            v_nextNoteAlpha[i] = 0;
+        } 
+
+        float* m_absolutePos = new float[d_absolutePosition];
+        float* v_absolutePos = new float[d_absolutePosition];
+        for (i = 0; i < d_absolutePosition; i++){
+            m_absolutePos[i] = 0;
+            v_absolutePos[i] = 0;
+        }
+
+        //Connecting layer
+        float*** m_connectingLayerWeights= new float**[2];
+        float*** v_connectingLayerWeights = new float**[2];
+        m_connectingLayerWeights[0]= new float*[d_connectingLayer];
+        v_connectingLayerWeights[0] = new float*[d_connectingLayer];
+        m_connectingLayerWeights[1]= new float*[d_model];
+        v_connectingLayerWeights[1] = new float*[d_model];
+
+        for (i = 0; i < d_connectingLayer; i++){
+            m_connectingLayerWeights[0][i] = new float[d_embedding];
+            v_connectingLayerWeights[0][i] = new float[d_embedding];
+            for (j = 0; j < d_embedding; j++){
+                m_connectingLayerWeights[0][i][j] = 0;
+                v_connectingLayerWeights[0][i][j] = 0;
+            }
+        }
+        for (i = 0; i < d_model; i++){
+            m_connectingLayerWeights[1][i] = new float[d_connectingLayer];
+            v_connectingLayerWeights[1][i] = new float[d_connectingLayer];
+            for (j = 0; j < d_connectingLayer; j++){
+                m_connectingLayerWeights[1][i][j] = 0;
+                v_connectingLayerWeights[1][i][j] = 0;
+            }
+        }
+
+        float* m_connectingLayerBiases = new float[d_connectingLayer];
+        float* v_connectingLayerBiases = new float[d_connectingLayer];
+        for (i = 0; i < d_connectingLayer; i++){
+            m_connectingLayerBiases[i] = 0;
+            v_connectingLayerBiases[i] = 0;
+        }
+
+        //FFN weights and biases
+        float**** m_ffnWeights= new float***[layers];
+        float**** v_ffnWeights = new float***[layers];
+        float** m_ffnBiases = new float*[layers];
+        float** v_ffnBiases = new float*[layers];
+        for (i = 0; i < layers; i++){
+            m_ffnWeights[i] = new float**[2];
+            v_ffnWeights[i] = new float**[2];
+
+            m_ffnWeights[i][0]= new float*[d_ffn];
+            v_ffnWeights[i][0] = new float*[d_ffn];
+
+            m_ffnWeights[i][1] = new float*[d_model];
+            v_ffnWeights[i][1] = new float*[d_model];
+
+            for (j = 0; j < d_ffn; j++){
+                m_ffnWeights[i][0][j]= new float[d_model];
+                v_ffnWeights[i][0][j] = new float[d_model];
+                for (k = 0; k < d_model; k++){ 
+                    m_ffnWeights[i][0][j][k]= 0;
+                    v_ffnWeights[i][0][j][k] = 0;
+                }
+            }
+            
+            for (j = 0; j < d_model; j++){
+                m_ffnWeights[i][1][j]= new float[d_ffn];
+                v_ffnWeights[i][1][j] = new float[d_ffn];
+                for (k = 0; k < d_ffn; k++){ 
+                    m_ffnWeights[i][1][j][k]= 0;
+                    v_ffnWeights[i][1][j][k] = 0;
+                }
+            }
+
+            m_ffnBiases[i] = new float[d_ffn];
+            v_ffnBiases[i] = new float[d_ffn];
+            for (j = 0; j < d_ffn; j++){
+                m_ffnBiases[i][j] = 0;
+                v_ffnBiases[i][j] = 0;
+            }
+        }
+
+        //Attention matricies
+        float**** m_keyMatricies = new float***[layers];
+        float**** v_keyMatricies = new float***[layers];
+        float**** m_quarryMatricies = new float***[layers];
+        float**** v_quarryMatricies = new float***[layers];
+        float**** m_valueUpMatricies = new float***[layers];
+        float**** v_valueUpMatricies = new float***[layers];
+        float**** m_valueDownMatricies = new float***[layers];
+        float**** v_valueDownMatricies = new float***[layers];
+        for (i = 0; i < layers; i++){
+            m_keyMatricies[i] = new float**[headsPerLayer];
+            v_keyMatricies[i] = new float**[headsPerLayer];
+            m_quarryMatricies[i] = new float**[headsPerLayer];
+            v_quarryMatricies[i] = new float**[headsPerLayer];
+            m_valueUpMatricies[i] = new float**[headsPerLayer];
+            v_valueUpMatricies[i] = new float**[headsPerLayer];
+            m_valueDownMatricies[i] = new float**[headsPerLayer];
+            v_valueDownMatricies[i] = new float**[headsPerLayer];
+            for (j = 0; j < headsPerLayer; j++){
+                m_keyMatricies[i][j] = new float*[d_attention];
+                v_keyMatricies[i][j] = new float*[d_attention];
+                m_quarryMatricies[i][j] = new float*[d_attention];
+                v_quarryMatricies[i][j] = new float*[d_attention];
+                m_valueUpMatricies[i][j] = new float*[d_attention];
+                v_valueUpMatricies[i][j] = new float*[d_attention];
+                m_valueDownMatricies[i][j] = new float*[d_attention];
+                v_valueDownMatricies[i][j] = new float*[d_attention];
+                for (k = 0; k < d_attention; k++){
+                    m_keyMatricies[i][j][k] = new float[d_model];
+                    v_keyMatricies[i][j][k] = new float[d_model];
+                    m_quarryMatricies[i][j][k] = new float[d_model];
+                    v_quarryMatricies[i][j][k] = new float[d_model];
+                    m_valueUpMatricies[i][j][k] = new float[d_model];
+                    v_valueUpMatricies[i][j][k] = new float[d_model];
+                    m_valueDownMatricies[i][j][k] = new float[d_model];
+                    v_valueDownMatricies[i][j][k] = new float[d_model];
+                    for (l = 0; l < d_model; l++){
+                        m_keyMatricies[i][j][k][j] = 0;
+                        v_keyMatricies[i][j][k][j] = 0;
+                        m_quarryMatricies[i][j][k][j] = 0;
+                        v_quarryMatricies[i][j][k][j] = 0;
+                        m_valueUpMatricies[i][j][k][j] = 0;
+                        v_valueUpMatricies[i][j][k][j] = 0;
+                        m_valueDownMatricies[i][j][k][j] = 0;
+                        v_valueDownMatricies[i][j][k][j] = 0;
+                    }
+                }
+            }
+        }
+        //Unebedding
+        float** m_unembeddingMatrix = new float*[keyRange + velocityRange + 3];
+        float** v_unembeddingMatrix = new float*[keyRange + velocityRange + 3];
+        for (i = 0; i < keyRange + velocityRange + 3; i++){
+            m_unembeddingMatrix[i] = new float[d_model];
+            v_unembeddingMatrix[i] = new float[d_model];
+            for (j = 0; j < d_model; j++){
+                m_unembeddingMatrix[i][j] = 0;
+                v_unembeddingMatrix[i][j] = 0;
+            }
+        }
+
+#pragma endregion
+
         for (int epoch = 0; epoch < settings.getEpochs(); epoch++){
             time = epoch + 1;
             for(int batchNo = 0; batchNo < FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / settings.getBatchSize(); batchNo++){
                 int startIndex = batchNo * settings.getBatchSize();
                 int endIndex = startIndex + settings.getBatchSize();
-                //~for every batch looping every parameter
-
                 //Embedding matricies
                 for (i = 0; i < keyRange; i++){
                     for (j = 0; j < d_keyEmbedding; j++){
                         g = calculateGradientWithRespectTo(keyEmbeddingMatrix[i], j, settings, startIndex, endIndex);
-                        float M = beta_1 * M + beta_3 * g;
-                        float V = beta_2 * V + beta_4 * pow(g, 2);
-                        m_hat = 0 / (1 - pow(beta_1, time));
-                        v_hat = 0 / (1 - pow(beta_2, time));
+                        m_keyEmbedding[i][j] = beta_1 * m_keyEmbedding[i][j] + beta_3 * g;
+                        v_keyEmbedding[i][j] = beta_2 * v_keyEmbedding[i][j] + beta_4 * pow(g, 2);
+                        m_hat = m_keyEmbedding[i][j] / (1 - pow(beta_1, time));
+                        v_hat = v_keyEmbedding[i][j] / (1 - pow(beta_2, time));
                         keyEmbeddingMatrix[i][j] = keyEmbeddingMatrix[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
                 for (i = 0; i < velocityRange; i++){
                     for (j = 0; j < d_velocityEmbedding; j++){
-                        velocityEmbeddingMatrix[i][j] = 0;
+                        g = calculateGradientWithRespectTo(velocityEmbeddingMatrix[i], j, settings, startIndex, endIndex);
+                        m_velocityEmbedding[i][j] = beta_1 * m_velocityEmbedding[i][j] + beta_3 * g;
+                        v_velocityEmbedding[i][j] = beta_2 * v_velocityEmbedding[i][j] + beta_4 * pow(g, 2);
+                        m_hat = m_velocityEmbedding[i][j] / (1 - pow(beta_1, time));
+                        v_hat = v_velocityEmbedding[i][j] / (1 - pow(beta_2, time));
+                        velocityEmbeddingMatrix[i][j] = velocityEmbeddingMatrix[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
 
                 //Embedding aplhas
                 for (i = 0; i < d_prevNoteEmbedding; i++){
-                        prevNoteAlphas[i] = 0;
+                        g = calculateGradientWithRespectTo(prevNoteAlphas, i, settings, startIndex, endIndex);
+                        m_prevNoteAlpha[i] = beta_1 * m_prevNoteAlpha[i] + beta_3 * g;
+                        v_prevNoteAlpha[i] = beta_2 * v_prevNoteAlpha[i] + beta_4 * pow(g, 2);
+                        m_hat = m_prevNoteAlpha[i] / (1 - pow(beta_1, time));
+                        v_hat = v_prevNoteAlpha[i] / (1 - pow(beta_2, time));
+                        prevNoteAlphas[i] = prevNoteAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
                 for (i = 0; i < d_nextNoteEmbedding; i++){
-                        nextNoteAlphas[i] = 0;
+                        g = calculateGradientWithRespectTo(nextNoteAlphas, i, settings, startIndex, endIndex);
+                        m_nextNoteAlpha[i] = beta_1 * m_nextNoteAlpha[i] + beta_3 * g;
+                        v_nextNoteAlpha[i] = beta_2 * v_nextNoteAlpha[i] + beta_4 * pow(g, 2);
+                        m_hat = m_nextNoteAlpha[i] / (1 - pow(beta_1, time));
+                        v_hat = v_nextNoteAlpha[i] / (1 - pow(beta_2, time));
+                        nextNoteAlphas[i] = nextNoteAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
                 for (i = 0; i < d_absolutePosition; i++){
-                        absolutePosAlphas[i] = 0;
+                        g = calculateGradientWithRespectTo(absolutePosAlphas, i, settings, startIndex, endIndex);
+                        m_absolutePos[i] = beta_1 * m_absolutePos[i] + beta_3 * g;
+                        v_absolutePos[i] = beta_2 * v_absolutePos[i] + beta_4 * pow(g, 2);
+                        m_hat = m_absolutePos[i] / (1 - pow(beta_1, time));
+                        v_hat = v_absolutePos[i] / (1 - pow(beta_2, time));
+                        absolutePosAlphas[i] = absolutePosAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
 
                 //Connecting layer
                 for (i = 0; i < d_connectingLayer; i++){
                     for (j = 0; j < d_embedding; j++){
-                       connectingLayerWeights[0][i][j] = 0;
+                        g = calculateGradientWithRespectTo(connectingLayerWeights[0][i], j, settings, startIndex, endIndex);
+                        m_connectingLayerWeights[0][i][j] = beta_1 * m_velocityEmbedding[i][j] + beta_3 * g;
+                        v_connectingLayerWeights[0][i][j] = beta_2 * v_velocityEmbedding[i][j] + beta_4 * pow(g, 2);
+                        m_hat = m_connectingLayerWeights[0][i][j] / (1 - pow(beta_1, time));
+                        v_hat = v_connectingLayerWeights[0][i][j] / (1 - pow(beta_2, time));
+                        connectingLayerWeights[0][i][j] = connectingLayerWeights[i][0][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
                 for (i = 0; i < d_model; i++){
                     for (j = 0; j < d_connectingLayer; j++){
-                        connectingLayerWeights[1][i][j] = 0;
+                        g = calculateGradientWithRespectTo(connectingLayerWeights[1][i], j, settings, startIndex, endIndex);
+                        m_connectingLayerWeights[1][i][j] = beta_1 * m_velocityEmbedding[i][j] + beta_3 * g;
+                        v_connectingLayerWeights[1][i][j] = beta_2 * v_velocityEmbedding[i][j] + beta_4 * pow(g, 2);
+                        m_hat = m_connectingLayerWeights[1][i][j] / (1 - pow(beta_1, time));
+                        v_hat = v_connectingLayerWeights[1][i][j] / (1 - pow(beta_2, time));
+                        connectingLayerWeights[1][i][j] = connectingLayerWeights[i][0][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
 
                 for (i = 0; i < d_connectingLayer; i++){
-                    connectingLayerBiases[i] = 0;
+                        g = calculateGradientWithRespectTo(connectingLayerBiases, i, settings, startIndex, endIndex);
+                        m_connectingLayerBiases[i] = beta_1 * m_connectingLayerBiases[i] + beta_3 * g;
+                        v_connectingLayerBiases[i] = beta_2 * v_connectingLayerBiases[i] + beta_4 * pow(g, 2);
+                        m_hat = m_connectingLayerBiases[i] / (1 - pow(beta_1, time));
+                        v_hat = v_connectingLayerBiases[i] / (1 - pow(beta_2, time));
+                        connectingLayerBiases[i] = connectingLayerBiases[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
 
                 //FFN weights and biases
                 for (i = 0; i < layers; i++){
                     for (j = 0; j < d_ffn; j++){
                         for (k = 0; k < d_model; k++){
-                            ffnWeights[i][0][j][k] = 0;
+                            g = calculateGradientWithRespectTo(ffnWeights[i][0][j], k, settings, startIndex, endIndex);
+                            m_ffnWeights[i][0][j][k] = beta_1 * m_ffnWeights[i][0][j][k] + beta_3 * g;
+                            v_ffnWeights[i][0][j][k] = beta_2 * v_ffnWeights[i][0][j][k] + beta_4 * pow(g, 2);
+                            m_hat = m_ffnWeights[i][0][j][k] / (1 - pow(beta_1, time));
+                            v_hat = v_ffnWeights[i][0][j][k] / (1 - pow(beta_2, time));
+                            ffnWeights[i][0][j][k] = ffnWeights[i][0][j][k] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                         }
                     }
                     for (j = 0; j < d_model; j++){
                         for (k = 0; k < d_ffn; k++){
-                            ffnWeights[i][1][j][k] = 0;
+                            g = calculateGradientWithRespectTo(ffnWeights[i][1][j], k, settings, startIndex, endIndex);
+                            m_ffnWeights[i][1][j][k] = beta_1 * m_ffnWeights[i][0][j][k] + beta_3 * g;
+                            v_ffnWeights[i][1][j][k] = beta_2 * v_ffnWeights[i][0][j][k] + beta_4 * pow(g, 2);
+                            m_hat = m_ffnWeights[i][1][j][k] / (1 - pow(beta_1, time));
+                            v_hat = v_ffnWeights[i][1][j][k] / (1 - pow(beta_2, time));
+                            ffnWeights[i][1][j][k] = ffnWeights[i][1][j][k] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                         }
                     }
                     for (j = 0; j < d_ffn; j++){
-                        ffnBiases[i][j] = 0;
+                        g = calculateGradientWithRespectTo(ffnBiases[i], j, settings, startIndex, endIndex);
+                        m_ffnBiases[i][j] = beta_1 * m_ffnBiases[i][j] + beta_3 * g;
+                        v_ffnBiases[i][j] = beta_2 * v_ffnBiases[i][j] + beta_4 * pow(g, 2);
+                        m_hat = m_ffnBiases[i][j] / (1 - pow(beta_1, time));
+                        v_hat = v_ffnBiases[i][j] / (1 - pow(beta_2, time));
+                        ffnBiases[i][j] = ffnBiases[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
 
@@ -507,10 +738,33 @@ void NoteTransformer::train(TrainingSettings settings){
                     for (j = 0; j < headsPerLayer; j++){
                         for (k = 0; k < d_attention; k++){
                             for (l = 0; l < d_model; l++){
-                                keyMatricies[i][j][k][l] = 0;
-                                quarryMatricies[i][j][k][l] = 0;
-                                valueUpMatricies[i][j][k][l] = 0;
-                                valueDownMatricies[i][j][k][l] = 0;
+                                g = calculateGradientWithRespectTo(keyMatricies[i][j][k], l, settings, startIndex, endIndex);
+                                m_keyMatricies[i][j][k][l] = beta_1 * m_keyMatricies[i][j][k][l] + beta_3 * g;
+                                v_keyMatricies[i][j][k][l] = beta_2 * v_keyMatricies[i][j][k][l] + beta_4 * pow(g, 2);
+                                m_hat = 0 / (1 - pow(beta_1, time));
+                                v_hat = 0 / (1 - pow(beta_2, time));
+                                keyMatricies[i][j][k][l] = keyMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
+
+                                g = calculateGradientWithRespectTo(quarryMatricies[i][j][k], l, settings, startIndex, endIndex);
+                                m_quarryMatricies[i][j][k][l] = beta_1 * m_quarryMatricies[i][j][k][l] + beta_3 * g;
+                                v_quarryMatricies[i][j][k][l] = beta_2 * v_quarryMatricies[i][j][k][l] + beta_4 * pow(g, 2);
+                                m_hat = 0 / (1 - pow(beta_1, time));
+                                v_hat = 0 / (1 - pow(beta_2, time));
+                                quarryMatricies[i][j][k][l] = quarryMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
+                                
+                                g = calculateGradientWithRespectTo(valueUpMatricies[i][j][k], l, settings, startIndex, endIndex);
+                                m_valueUpMatricies[i][j][k][l] = beta_1 * m_valueUpMatricies[i][j][k][l] + beta_3 * g;
+                                v_valueUpMatricies[i][j][k][l] = beta_2 * v_valueUpMatricies[i][j][k][l] + beta_4 * pow(g, 2);
+                                m_hat = 0 / (1 - pow(beta_1, time));
+                                v_hat = 0 / (1 - pow(beta_2, time));
+                                valueUpMatricies[i][j][k][l] = valueUpMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
+
+                                g = calculateGradientWithRespectTo(valueDownMatricies[i][j][k], l, settings, startIndex, endIndex);
+                                m_valueDownMatricies[i][j][k][l] = beta_1 * m_valueDownMatricies[i][j][k][l] + beta_3 * g;
+                                v_valueDownMatricies[i][j][k][l] = beta_2 * v_valueDownMatricies[i][j][k][l] + beta_4 * pow(g, 2);
+                                m_hat = 0 / (1 - pow(beta_1, time));
+                                v_hat = 0 / (1 - pow(beta_2, time));
+                                valueDownMatricies[i][j][k][l] = valueDownMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                             }
                         }
                     }
@@ -518,13 +772,132 @@ void NoteTransformer::train(TrainingSettings settings){
 
                 //Unembedding
                 for (i = 0; i < keyRange + velocityRange + 3; i++){
-                    for (j = 0; j < d_prevNoteEmbedding; j++){
-                       unembeddingMatrix[i][j] = 0;
+                    for (j = 0; j < d_model; j++){
+                        g = calculateGradientWithRespectTo(unembeddingMatrix[i], j, settings, startIndex, endIndex);
+                        m_unembeddingMatrix[i][j] = beta_1 * m_unembeddingMatrix[i][j] + beta_3 * g;
+                        v_unembeddingMatrix[i][j] = beta_2 * v_unembeddingMatrix[i][j] + beta_4 * pow(g, 2);
+                        m_hat = 0 / (1 - pow(beta_1, time));
+                        v_hat = 0 / (1 - pow(beta_2, time));
+                        unembeddingMatrix[i][j] = unembeddingMatrix[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
             }
         }
+#pragma region Deallocation
+    //Embedding matricies
+    for (i = 0; i < keyRange; i++) {
+        delete[] m_keyEmbedding[i];
+        delete[] v_keyEmbedding[i];
     }
+    delete[] m_keyEmbedding;
+    delete[] v_keyEmbedding;
+
+    for (i = 0; i < velocityRange; i++) {
+        delete[] m_velocityEmbedding[i];
+        delete[] v_velocityEmbedding[i];
+    }
+    delete[] m_velocityEmbedding;
+    delete[] v_velocityEmbedding;
+
+    //Embedding alphas
+    delete[] m_prevNoteAlpha;
+    delete[] v_prevNoteAlpha;
+    delete[] m_nextNoteAlpha;
+    delete[] v_nextNoteAlpha;
+    delete[] m_absolutePos;
+    delete[] v_absolutePos;
+
+    //Connecting layer
+    for (i = 0; i < d_connectingLayer; i++) {
+        delete[] m_connectingLayerWeights[0][i];
+        delete[] v_connectingLayerWeights[0][i];
+    }
+    for (i = 0; i < d_model; i++) {
+        delete[] m_connectingLayerWeights[1][i];
+        delete[] v_connectingLayerWeights[1][i];
+    }
+    delete[] m_connectingLayerWeights[0];
+    delete[] v_connectingLayerWeights[0];
+    delete[] m_connectingLayerWeights[1];
+    delete[] v_connectingLayerWeights[1];
+    delete[] m_connectingLayerWeights;
+    delete[] v_connectingLayerWeights;
+
+    delete[] m_connectingLayerBiases;
+    delete[] v_connectingLayerBiases;
+
+    //FFN weights and biases
+    for (i = 0; i < layers; i++) {
+        for (j = 0; j < d_ffn; j++) {
+            delete[] m_ffnWeights[i][0][j];
+            delete[] v_ffnWeights[i][0][j];
+        }
+        for (j = 0; j < d_model; j++) {
+            delete[] m_ffnWeights[i][1][j];
+            delete[] v_ffnWeights[i][1][j];
+        }
+        delete[] m_ffnWeights[i][0];
+        delete[] v_ffnWeights[i][0];
+        delete[] m_ffnWeights[i][1];
+        delete[] v_ffnWeights[i][1];
+        delete[] m_ffnBiases[i];
+        delete[] v_ffnBiases[i];
+    }
+    delete[] m_ffnWeights;
+    delete[] v_ffnWeights;
+    delete[] m_ffnBiases;
+    delete[] v_ffnBiases;
+
+    // Attention matricies
+    for (i = 0; i < layers; i++) {
+        for (j = 0; j < headsPerLayer; j++) {
+            for (k = 0; k < d_attention; k++) {
+                delete[] m_keyMatricies[i][j][k];
+                delete[] v_keyMatricies[i][j][k];
+                delete[] m_quarryMatricies[i][j][k];
+                delete[] v_quarryMatricies[i][j][k];
+                delete[] m_valueUpMatricies[i][j][k];
+                delete[] v_valueUpMatricies[i][j][k];
+                delete[] m_valueDownMatricies[i][j][k];
+                delete[] v_valueDownMatricies[i][j][k];
+            }
+            delete[] m_keyMatricies[i][j];
+            delete[] v_keyMatricies[i][j];
+            delete[] m_quarryMatricies[i][j];
+            delete[] v_quarryMatricies[i][j];
+            delete[] m_valueUpMatricies[i][j];
+            delete[] v_valueUpMatricies[i][j];
+            delete[] m_valueDownMatricies[i][j];
+            delete[] v_valueDownMatricies[i][j];
+        }
+        delete[] m_keyMatricies[i];
+        delete[] v_keyMatricies[i];
+        delete[] m_quarryMatricies[i];
+        delete[] v_quarryMatricies[i];
+        delete[] m_valueUpMatricies[i];
+        delete[] v_valueUpMatricies[i];
+        delete[] m_valueDownMatricies[i];
+        delete[] v_valueDownMatricies[i];
+    }
+    delete[] m_keyMatricies;
+    delete[] v_keyMatricies;
+    delete[] m_quarryMatricies;
+    delete[] v_quarryMatricies;
+    delete[] m_valueUpMatricies;
+    delete[] v_valueUpMatricies;
+    delete[] m_valueDownMatricies;
+    delete[] v_valueDownMatricies;
+
+    // Unembedding
+    for (i = 0; i < keyRange + velocityRange + 3; i++) {
+        delete[] m_unembeddingMatrix[i];
+        delete[] v_unembeddingMatrix[i];
+    }
+    delete[] m_unembeddingMatrix;
+    delete[] v_unembeddingMatrix;
+#pragma endregion
+    }
+
 
 float NoteTransformer::calculateCost(int** input, float** expectedOutput){
     float cost  = 0;
