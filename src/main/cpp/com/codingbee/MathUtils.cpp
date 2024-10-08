@@ -88,7 +88,7 @@ void MathUtils::applySoftmax(float* vector, int vectorLength, int temperature){
 
 float MathUtils::leakyReLU(float n){
     if (n < 0){
-        return 0.01 * n;
+        return 0.01f * n;
     }
     return n;
 }
