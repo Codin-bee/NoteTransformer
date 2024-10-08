@@ -14,5 +14,5 @@ A custom-built and modified Transformer architecture, implemented from scratch w
 * Indexes, superscripts: var_ _index_ (e.g. beta_1, m_hat)
 * Attention matricies: _ussage_ Matricies (e.g. keyMatricies, valueDownMatricies)
 ### Indexing
-* Normal matricies: matrix[collum][row]
-* Attention matricies: keyMatrix[layer][head][collum][row]
+* Normal matricies: matrix[row][column]
+* Attention matricies: keyMatrix[layer][head][row][column]

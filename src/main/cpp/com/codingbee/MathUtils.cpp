@@ -10,18 +10,51 @@ float** MathUtils::multiplySameSquareMatricies(float** matrixA, float** matrixB,
         throw Exception("The matrix size has to be higher than 0", ExceptionType::INVALID_ARGUMENT);
     }
     if (matrixA == nullptr || matrixB == nullptr){
-        throw Exception("The matricies can not be null pointers", ExceptionType::INVALID_ARGUMENT);
+        throw Exception("None of the matricies can be a null pointer", ExceptionType::INVALID_ARGUMENT);
     }
-    float ** matrixC = new float*[n];
-        for (int i = 0; i < n; i++){
-            matrixC[i] = new float[n];
-            for (int k =0; k < n; k++){
-                for (int j = 0; j < n; j++)
-                {
-                    matrixC[i][j] = matrixA[i][k] * matrixB[k][j];
-                }
+
+    float **matrixC = new float*[n];
+    for (int i = 0; i < n; i++) {
+        matrixC[i] = new float[n];
+        for (int j = 0; j < n; j++) {
+            matrixC[i][j] = 0;
+        }
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            for (int k = 0; k < n; k++) {
+                matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
             }
-        } 
+        }
+    }
+    return matrixC;
+}
+
+float** MathUtils::multiplyMatricies(float** matrixA, int columnsA, int rowsA, float** matrixB, int columnsB){
+    if (columnsA < 1 || columnsB < 0 || rowsA < 0){
+        throw Exception("All the matrix sizes have to be higher than 0", ExceptionType::INVALID_ARGUMENT);
+    }
+    if (matrixA == nullptr || matrixB == nullptr){
+        throw Exception("None of the matricies can be a null pointer", ExceptionType::INVALID_ARGUMENT);
+    }
+
+    float** matrixC = new float*[rowsA];
+    for (int i = 0; i < rowsA; i++) {
+        matrixC[i] = new float[columnsB];
+        for (int j = 0; j < columnsB; j++) {
+            matrixC[i][j] = 0;
+        }
+    }
+
+    for (int i = 0; i < rowsA; i++) {
+        for (int j = 0; j < columnsB; j++) {
+            for (int k = 0; k < columnsA; k++) {
+                matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
+            }
+        }
+    }
+
     return matrixC;
 }
 
@@ -52,7 +85,6 @@ void MathUtils::applySoftmax(float* vector, int vectorLength, int temperature){
         vector[i] = vector[i] / sum;
     }
 }
-
 
 float MathUtils::leakyReLU(float n){
     if (n < 0){
