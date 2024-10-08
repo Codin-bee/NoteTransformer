@@ -127,6 +127,15 @@ public:
 
     float calculateGradientWithRespectTo(float* array, int index, TrainingSettings settings, int startIndex, int endIndex);
 
+    float** embeddMatrix(int** matrix);
+
+    float** unembeddMatrixAndDeleteOriginal(float** matrix);
+
+    void normalizeOutputMatrix(float** matrix);
+
+    void processAttention(float** matrix, int layer);
+
+    void joinAndClearThreads(std::vector<thread>& threads);
     //Getters and setters
     public :
 
