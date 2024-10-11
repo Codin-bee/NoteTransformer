@@ -1,6 +1,7 @@
 #include "MathUtils.h"
 #include <math.h>
 #include "Exception.h"
+#include <iostream>
 
 using namespace std;
 
@@ -91,4 +92,24 @@ float MathUtils::leakyReLU(float n){
         return 0.01f * n;
     }
     return n;
+}
+
+float MathUtils::sigmoid(float n){
+    return 1 / (1 + exp(-n));
+}
+
+float* MathUtils::addVectors(float* vectorA, float* vectorB, int vectorLength){
+    float* vectorC = new float[vectorLength];
+    for (int i = 0; i < vectorLength; i++){
+        vectorC[i] = vectorA[i] + vectorB[i];
+    }
+    return vectorC;
+}
+
+float* MathUtils::multiplyVectors(float* vectorA, float* vectorB, int vectorLength){
+    float* vectorC = new float[vectorLength];
+    for (int i = 0; i < vectorLength; i++){
+        vectorC[i] = vectorA[i] * vectorB[i];
+    }
+    return vectorC;
 }

@@ -10,7 +10,6 @@ class MathUtils{
     /// @return the product of given matricies
     static float** multiplySameSquareMatricies(float** matrixA, float** matrixB, int n);
 
-
     /// @brief multiplies two given matricies and returns their product
     /// @param matrixA first matrix
     /// @param rowsA number of rows of the first matrix (the first index)
@@ -26,6 +25,12 @@ class MathUtils{
     /// @param temperature The temperature variable for the function, if you do not know what you are doing keep it as 1
     static void applySoftmax(float* vector, int vectorLength, int temperature);
 
+    static float* addVectors(float* vectorA, float* vectorB, int vectorLength);
+
+    static float* multiplyVectors(float* vectorA, float* vectorB, int vectorLength);
+
     static float leakyReLU(float n);
+
+    static float sigmoid(float n);
 };
 #endif
