@@ -32,5 +32,7 @@ class MathUtils{
     static float leakyReLU(float n);
 
     static float sigmoid(float n);
+
+    static float addVectorElements(float* vector, int vectorLength);
 };
 #endif

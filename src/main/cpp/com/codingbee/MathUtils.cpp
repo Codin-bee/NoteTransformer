@@ -98,6 +98,14 @@ float MathUtils::sigmoid(float n){
     return 1 / (1 + exp(-n));
 }
 
+float MathUtils::addVectorElements(float* vector, int vectorLength){
+    float sum = 0;
+    for (int i = 0; i < vectorLength; i++){
+        sum += vector[i];
+    }
+    return sum;
+}
+
 float* MathUtils::addVectors(float* vectorA, float* vectorB, int vectorLength){
     float* vectorC = new float[vectorLength];
     for (int i = 0; i < vectorLength; i++){
