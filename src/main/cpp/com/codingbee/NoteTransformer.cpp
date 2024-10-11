@@ -26,22 +26,23 @@ NoteTransformer::NoteTransformer(int context, int layerCount, int headsInLayers,
         //Utilities
         d_embedding = d_keyEmbedding + d_velocityEmbedding + d_prevNoteEmbedding + d_nextNoteEmbedding + d_absolutePosition;
         d_attention = d_model / headsPerLayer;
-        sqrtD_k = sqrt(d_attention);
+        attentionScalingFactor = 1 / sqrt(d_attention);
         softmaxTemperature = 1;
         outputMatrixRows = keyRange + velocityRange + 3;
     }
 
 float** NoteTransformer::process(int** matrixToProcess) {
-    std::vector<std::thread> threads;
-
+            //std::vector<std::thread> threads;
     // Embedding
     float** embeddedMatrix = embeddMatrix(matrixToProcess);
-    cerr << "EMBEDDING FINISHED";
-
+    cout << "EMBEDDING FINISHED \n";
     // Connecting layer
     float** processedMatrix = new float*[contextSize];
     for (int i = 0; i < contextSize; i++) {
         processedMatrix[i] = new float[d_model];
+        for (int j = 0; j < d_model; j++){
+            processedMatrix[i][j] = 0;
+        }
     }
     for (int i = 0; i < contextSize; i++) {
 //        threads.push_back(
@@ -51,15 +52,15 @@ float** NoteTransformer::process(int** matrixToProcess) {
 //        );
     connectLayer(embeddedMatrix[i], processedMatrix[i]);
     }
-    joinAndClearThreads(threads);
-    cerr << "CONNECTING FINISHED";
+            //joinAndClearThreads(threads);
 
+    cerr << "CONNECTING FINISHED \n";
     // Layers
     for (int i = 0; i < layers; i++) {
+
         // Attention block
-        processAttention(processedMatrix, i);
-        cerr << "ATTENTION OK \n";
-        
+        processAttention(processedMatrix, 0);
+        cerr << "ATTENTION FINISHED FOR LAYER " << i << "\n";
         // Feed forward networks
         for (int j = 0; j < contextSize; j++) {
             ffn(processedMatrix[j], i);
@@ -69,86 +70,59 @@ float** NoteTransformer::process(int** matrixToProcess) {
 //                })
 //            );
         }
-        joinAndClearThreads(threads);
-        cerr << "FFN Done \n";
+                //joinAndClearThreads(threads);
+        cout << "FFNS FINISHED FOR LAYER " << i << "\n";
     }
     // Unembedding
     float** finalOutput = unembeddMatrixAndDeleteOriginal(processedMatrix);
     // Normalizing outputs
     normalizeOutputMatrix(finalOutput);
-
     return finalOutput;
 }
 
 void NoteTransformer::attentionHead(float** theMatrix, float** outputMatrix, int layerNo, int headNo){
-        int i, j, k;
-
-        /*output[tokeNo][dimension(_model)]*/
-
-
         //Key, quarry and value calculation
-        float** quarries = new float*[contextSize];
-        float** keys = new float*[contextSize];
-        float** values = new float*[contextSize];
+        float** quarries = MathUtils::multiplyMatricies(theMatrix, contextSize, d_model, quarryMatricies[layerNo][headNo], d_attention);
+        float** keys =  MathUtils::multiplyMatricies(theMatrix, contextSize, d_model, keyMatricies[layerNo][headNo], d_attention);
+        float** values = MathUtils::multiplyMatricies(theMatrix, contextSize, d_model, valueMatricies[layerNo][headNo], d_model);
+
         float** dotProducts = new float*[contextSize];
-
-        for (i = 0; i < contextSize; i++){
-            quarries[i] = new float[d_attention];
-            keys[i] = new float[d_attention];
-            values[i] = new float[d_attention];
-            dotProducts[i] = new float[contextSize];
-
-            for (j = 0; j < d_attention; j++){
-                for (k = 0; k < d_model; k++){
-                    quarries[i][j] += quarryMatricies[layerNo][headNo][j][k] * theMatrix[i][k];
-                    keys[i][j] += keyMatricies[layerNo][headNo][j][k] * theMatrix[i][k];
-                    values[i][j] = valueDownMatricies[layerNo][headNo][j][k] * theMatrix[i][k];
-                }
+        for (int i = 0; i < contextSize; i++){
+            for (int j = 0; j < contextSize; j++){
+                dotProducts[i][j] = 0;
             }
         }
 
         //Key + quarry multiplication
-        for (i = 0; i < contextSize; i++){
-            for (j = 0; j < contextSize; j++){
-                for (k = 0; k < d_attention; k++){
-                    dotProducts[i][j] += quarries[i][k] * keys[j][k];
-                }
-                dotProducts[i][j] /= sqrtD_k;
+        for (int i = 0; i < contextSize; i++){
+            for (int j = 0; j < contextSize; j++){
+                dotProducts[i][j] = MathUtils::addVectorElements(MathUtils::multiplyVectors(quarries[i], keys[j], d_attention), d_attention);
+                dotProducts[i][j] /= attentionScalingFactor;
             }
         }
 
         //Masking
-        for (i = 0; i < contextSize; i++){
-            for (j = 0; j < contextSize; j++){
-                if (i < j){
-                    for (k = 0; k < d_attention; k++){
-                        dotProducts[i][j] = 0.000000001;
-                    }
+        for (int i = 0; i < contextSize; i++){
+            for (int j = 0; j < contextSize; j++){
+                if (j < i){
+                    dotProducts[i][j] = 0.000000001;
                 }
             }
         }
         //Normalization
-        for (i = 0; i < contextSize; i++){
+        for (int i = 0; i < contextSize; i++){
             MathUtils::applySoftmax(dotProducts[i], contextSize, softmaxTemperature);
         }
-        float** changes = new float*[contextSize];
-        //Value multiplication
-        for (i = 0; i < contextSize; i++){
-            changes[i] = new float[d_attention];
-            for (j = 0; j < contextSize; j++){
-                for (k = 0; k < d_attention; k++){
-                    changes[i][k] += values[j][k] * dotProducts[i][j];
-                }
-            }
-        }
 
-        //Upscaling back to d_model
-        for (i = 0; i < contextSize; i++){
-            for (j = 0; j < d_model; j++){
-                for (k = 0; k < d_attention; k++){
-                    outputMatrix[i][j] += changes[i][j] * valueUpMatricies[layerNo][headNo][k][j];
-                }
-            }
+        //Calculating the changes to embeddings
+        outputMatrix = MathUtils::multiplyMatricies(dotProducts, contextSize, contextSize, values, d_model);
+        
+        //Deleting used variables
+        for (int i = 0; i < contextSize; i++){
+            delete[] quarries[i];
+            delete[] keys[i];
+            delete[] values[i];
+            delete[] dotProducts[i];
         }
     }
 
@@ -177,29 +151,29 @@ void NoteTransformer::ffn(float* vector, int layer){
 
         int i, j;
 
-        for (i = 0; i < d_ffn; i++)
-        {
+        for (i = 0; i < d_ffn; i++){
             originalVector[i] = vector[i];
             vector[i] = 0;
         }
         
         for (i = 0; i < d_ffn; i++){
             neuronValue = 0;
-            for (j = 0; j < d_model; j++)
-            {
+            for (j = 0; j < d_model; j++){
+                cerr << j;
                 neuronValue += originalVector[j] * ffnWeights[layer][0][i][j];
             }
             hiddenVector[i] = MathUtils::leakyReLU(neuronValue + ffnBiases[layer][i]);
         }
+        cerr << "\n";
         cerr << "1trans ok \n";
         delete[] originalVector;
         for (i = 0; i < d_model; i++){
             neuronValue = 0;
             for (j = 0; j < d_ffn; j++){
-                //cerr << j;
+                cerr << j;
                 neuronValue += hiddenVector[j] * ffnWeights[layer][1][i][j];
             }
-            vector[i] = neuronValue;
+            vector[i] = MathUtils::sigmoid(neuronValue);
         }
         delete[] hiddenVector;
         cerr << "2trans ok \n";
@@ -218,19 +192,16 @@ void NoteTransformer::connectLayer(float* originalVector, float* downscaledVecto
             for (j = 0; j < d_embedding; j++){
                neuronValue += originalVector[j] * connectingLayerWeights[0][i][j];
             }
-            upscaledVector[i] = neuronValue + connectingLayerBiases[i];
+            upscaledVector[i] = MathUtils::leakyReLU(neuronValue + connectingLayerBiases[i]);
         }
 
 
-        for (i = 0; i < d_model; i++)
-        {
+        for (i = 0; i < d_model; i++){
             neuronValue = 0;
-
-            for (j = 0; j < d_connectingLayer; j++)
-            {
-                neuronValue += originalVector[j] * connectingLayerWeights[1][i][j];
+            for (j = 0; j < d_connectingLayer; j++){
+                neuronValue += upscaledVector[j] * connectingLayerWeights[1][i][j];
             }
-            downscaledVector[i] = neuronValue;
+            downscaledVector[i] = MathUtils::sigmoid(neuronValue);
         }
 
         delete[] upscaledVector;
@@ -284,24 +255,20 @@ void NoteTransformer::allocateModelMemory(){
         //Attention matricies
         keyMatricies = new float ***[layers];
         quarryMatricies = new float ***[layers];
-        valueUpMatricies = new float ***[layers];
-        valueDownMatricies = new float ***[layers];
+        valueMatricies = new float ***[layers];
 
         for (i = 0; i < layers; i++){
             keyMatricies[i] = new float **[headsPerLayer];
             quarryMatricies[i] = new float **[headsPerLayer];
-            valueUpMatricies[i] = new float **[headsPerLayer];
-            valueDownMatricies[i] = new float **[headsPerLayer];
+            valueMatricies[i] = new float **[headsPerLayer];
             for (j = 0; j < headsPerLayer; j++){
-                keyMatricies[i][j] = new float *[d_attention];
-                quarryMatricies[i][j] = new float *[d_attention];
-                valueUpMatricies[i][j] = new float *[d_attention];
-                valueDownMatricies[i][j] = new float *[d_attention];
-                for (k = 0; k < d_attention; k++){
-                    keyMatricies[i][j][k] = new float [d_model];
-                    quarryMatricies[i][j][k] = new float [d_model];
-                    valueUpMatricies[i][j][k] = new float [d_model];
-                    valueDownMatricies[i][j][k] = new float [d_model];
+                keyMatricies[i][j] = new float *[d_model];
+                quarryMatricies[i][j] = new float *[d_model];
+                valueMatricies[i][j] = new float *[d_model];
+                for (k = 0; k < d_model; k++){
+                    keyMatricies[i][j][k] = new float [d_attention];
+                    quarryMatricies[i][j][k] = new float [d_attention];
+                    valueMatricies[i][j][k] = new float [d_model];
                 }
             }
         }
@@ -870,29 +837,25 @@ void NoteTransformer::normalizeOutputMatrix(float** matrix){
 
 void NoteTransformer::processAttention(float** matrix, int layer){
     float*** receivedChanges = new float**[headsPerLayer];
-    vector<thread> threads;
+            //vector<thread> threads;
         for (int i = 0; i < headsPerLayer; i++) {
-            receivedChanges[i] = new float*[contextSize]; 
-            for (int j = 0; j < contextSize; j++){
-                receivedChanges[i][j] = new float[d_model];
-            }
-//                threads.push_back(
-//                std::thread([this, &matrix, &receivedChanges, layer, i]() {
-//                    this->attentionHead(matrix, receivedChanges[i], layer, i);
-//                })
-//            );
+        //                threads.push_back(
+        //                std::thread([this, &matrix, &receivedChanges, layer, i]() {
+        //                    this->attentionHead(matrix, receivedChanges[i], layer, i);
+        //                })
+        //            );
             attentionHead(matrix, receivedChanges[i], layer, i);
         }
-        joinAndClearThreads(threads);
+                //joinAndClearThreads(threads);
         for (int i = 0; i < contextSize; i++) {
-//            threads.push_back(
-//                std::thread([this, &receivedChanges, &matrix, i]() {
-//                    this->addChanges(matrix[i], receivedChanges, i);
-//                })
-//            );
+        //            threads.push_back(
+        //                std::thread([this, &receivedChanges, &matrix, i]() {
+        //                    this->addChanges(matrix[i], receivedChanges, i);
+        //                })
+        //            );
             addChanges(matrix[i], receivedChanges, i);
         }
-        joinAndClearThreads(threads);
+                //joinAndClearThreads(threads);
         for (int i = 0; i < headsPerLayer; i++){
             for (int j = 0; j < contextSize; j++){
                 delete[] receivedChanges[i][j];
@@ -979,8 +942,7 @@ void NoteTransformer::save(string dirPath){
                 std::filesystem::create_directories(currentPath);
                 FileUtils::saveFloatMatrixToFiles(currentPath + "/keyMatrix", keyMatricies[i][j], d_attention, d_model);
                 FileUtils::saveFloatMatrixToFiles(currentPath + "/quarryMatrix", quarryMatricies[i][j], d_attention, d_model);
-                FileUtils::saveFloatMatrixToFiles(currentPath + "/valueDownMatrix", valueDownMatricies[i][j], d_attention, d_model);
-                FileUtils::saveFloatMatrixToFiles(currentPath + "/ValueUpMatrix", valueUpMatricies[i][j], d_attention, d_model);
+                FileUtils::saveFloatMatrixToFiles(currentPath + "/valueMatrix", valueMatricies[i][j], d_model, d_model);
             }
         }
         //Unembedding
@@ -1035,14 +997,14 @@ void NoteTransformer::randomInit(){
         }
 
         //Connecting layer
-        variation = sqrt(2.0f / (float)d_embedding);
+        variation = sqrt(2.0f / pow((float)d_embedding, 2));
         std::normal_distribution<float> distribution6(0, variation);
         for (i = 0; i < d_connectingLayer; i++){
             for (j = 0; j < d_embedding; j++){
                 connectingLayerWeights[0][i][j] = distribution6(generator);
             }
         }
-        variation = sqrt(2.0f / (float)d_connectingLayer);
+        variation = sqrt(2.0f / pow((float)d_connectingLayer, 2));
         std::normal_distribution<float> distribution7(0, variation);
         for (i = 0; i < d_model; i++){
             for (j = 0; j < d_connectingLayer; j++){
@@ -1056,14 +1018,14 @@ void NoteTransformer::randomInit(){
 
         //FFN weights and biases
         for (i = 0; i < layers; i++){
-            variation = sqrt(2.0f / (float)d_model);
+            variation = sqrt(2.0f / pow((float)d_model, 2));
             std::normal_distribution<float> distribution8(0, variation);
             for (j = 0; j < d_ffn; j++){
                 for (k = 0; k < d_model; k++){
                     ffnWeights[i][0][j][k] = distribution8(generator);
                 }
             }
-            variation = sqrt(2.0f / (float)d_ffn);
+            variation = sqrt(2.0f / pow((float)d_ffn, 2));
             std::normal_distribution<float> distribution9(0, variation);
             for (j = 0; j < d_model; j++){
                 for (k = 0; k < d_ffn; k++){
@@ -1076,16 +1038,17 @@ void NoteTransformer::randomInit(){
         }
 
         //Attention matricies
-        variation = sqrt(2.0f / (float)d_model);
+        variation = sqrt(2.0f / pow((float)d_model, 2));
         std::normal_distribution<float> distribution10(0, variation);
         for (i = 0; i < layers; i++){
             for (j = 0; j < headsPerLayer; j++){
-                for (k = 0; k < d_attention; k++){
-                    for (l = 0; l < d_model; l++){
+                for (k = 0; k < d_model; k++){
+                    for (l = 0; l < d_attention; l++){
                         keyMatricies[i][j][k][l] = distribution10(generator);
                         quarryMatricies[i][j][k][l] = distribution10(generator);
-                        valueUpMatricies[i][j][k][l] = distribution10(generator);
-                        valueDownMatricies[i][j][k][l] = distribution10(generator);
+                    }
+                    for (int l = 0; l < d_model; l++){
+                        valueMatricies[i][j][k][l] = distribution10(generator);
                     }
                 }
             }
@@ -1135,8 +1098,7 @@ void NoteTransformer::init(string dirPath){
                 currentPath = dirPath + "/layers/layer" + to_string(i) + "/attention/head" + to_string(j);
                 keyMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "/keyMatrix");
                 quarryMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "/quarryMatrix");
-                valueDownMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "/valueDownMatrix");
-                valueUpMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "/valueUpMatrix");
+                valueMatricies[i][j] = FileUtils::readFloatMatrixFromFile(currentPath + "/valueMatrix");
             }
         }
 
@@ -1159,7 +1121,7 @@ int NoteTransformer::getNumberOfParameters(){
     params += layers * (d_model *d_ffn * 2 + d_ffn);
 
     //Attention
-    params += layers * 4 * d_attention *d_model;
+    params += layers * (2 * d_attention *d_model + d_model * d_model);
 
     //Unembedding
     params += d_model * (keyRange + velocityRange + 3);
@@ -1215,28 +1177,24 @@ NoteTransformer::~NoteTransformer() {
     //Attention matricies
     for (i = 0; i < layers; i++) {
         for (j = 0; j < headsPerLayer; j++) {
-            for (k = 0; k < d_attention; k++) {
+            for (k = 0; k < d_model; k++) {
                 delete[] quarryMatricies[i][j][k];
                 delete[] keyMatricies[i][j][k];
-                delete[] valueDownMatricies[i][j][k];
-                delete[] valueUpMatricies[i][j][k];
+                delete[] valueMatricies[i][j][k];
             }
 
             delete[] quarryMatricies[i][j];
             delete[] keyMatricies[i][j];
-            delete[] valueUpMatricies[i][j];
-            delete[] valueDownMatricies[i][j];
+            delete[] valueMatricies[i][j];
         }
 
         delete[] quarryMatricies[i];
         delete[] keyMatricies[i];
-        delete[] valueUpMatricies[i];
-        delete[] valueDownMatricies[i];
+        delete[] valueMatricies[i];
     }
     delete[] quarryMatricies;
     delete[] keyMatricies;
-    delete[] valueUpMatricies;
-    delete[] valueDownMatricies;
+    delete[] valueMatricies;
 
     //Unembedding
     for (i = 0; i < keyRange + velocityRange + 3; i++) {
