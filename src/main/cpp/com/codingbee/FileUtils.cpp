@@ -126,15 +126,15 @@ int** FileUtils::readIntMatrixFromFile(string fileName) {
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
     }
 
-    int collums, rows;
-    inFile >> collums >> rows;
+    int rows, columns;
+    inFile >> columns >> rows;
 
-    int** matrix = new int*[collums];
-    for (i = 0; i < collums; ++i) {
+    int** matrix = new int*[columns];
+    for (i = 0; i < columns; ++i) {
         matrix[i] = new int[rows];
     }
 
-    for (i = 0; i < collums; ++i) {
+    for (i = 0; i < columns; ++i) {
         for (int j = 0; j < rows; ++j) {
             inFile >> matrix[i][j];
         }
