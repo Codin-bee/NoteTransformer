@@ -410,46 +410,38 @@ void NoteTransformer::train(TrainingSettings settings){
         float**** v_keyMatricies = new float***[layers];
         float**** m_quarryMatricies = new float***[layers];
         float**** v_quarryMatricies = new float***[layers];
-        float**** m_valueUpMatricies = new float***[layers];
-        float**** v_valueUpMatricies = new float***[layers];
-        float**** m_valueDownMatricies = new float***[layers];
-        float**** v_valueDownMatricies = new float***[layers];
+        float**** m_valueMatricies = new float***[layers];
+        float**** v_valueMatricies = new float***[layers];
         for (i = 0; i < layers; i++){
             m_keyMatricies[i] = new float**[headsPerLayer];
             v_keyMatricies[i] = new float**[headsPerLayer];
             m_quarryMatricies[i] = new float**[headsPerLayer];
             v_quarryMatricies[i] = new float**[headsPerLayer];
-            m_valueUpMatricies[i] = new float**[headsPerLayer];
-            v_valueUpMatricies[i] = new float**[headsPerLayer];
-            m_valueDownMatricies[i] = new float**[headsPerLayer];
-            v_valueDownMatricies[i] = new float**[headsPerLayer];
+            m_valueMatricies[i] = new float**[headsPerLayer];
+            v_valueMatricies[i] = new float**[headsPerLayer];
             for (j = 0; j < headsPerLayer; j++){
                 m_keyMatricies[i][j] = new float*[d_attention];
                 v_keyMatricies[i][j] = new float*[d_attention];
                 m_quarryMatricies[i][j] = new float*[d_attention];
                 v_quarryMatricies[i][j] = new float*[d_attention];
-                m_valueUpMatricies[i][j] = new float*[d_attention];
-                v_valueUpMatricies[i][j] = new float*[d_attention];
-                m_valueDownMatricies[i][j] = new float*[d_attention];
-                v_valueDownMatricies[i][j] = new float*[d_attention];
-                for (k = 0; k < d_attention; k++){
+                m_valueMatricies[i][j] = new float*[d_attention];
+                v_valueMatricies[i][j] = new float*[d_attention];
+                for (k = 0; k < d_model; k++){
                     m_keyMatricies[i][j][k] = new float[d_model];
                     v_keyMatricies[i][j][k] = new float[d_model];
                     m_quarryMatricies[i][j][k] = new float[d_model];
                     v_quarryMatricies[i][j][k] = new float[d_model];
-                    m_valueUpMatricies[i][j][k] = new float[d_model];
-                    v_valueUpMatricies[i][j][k] = new float[d_model];
-                    m_valueDownMatricies[i][j][k] = new float[d_model];
-                    v_valueDownMatricies[i][j][k] = new float[d_model];
+                    m_valueMatricies[i][j][k] = new float[d_model];
+                    v_valueMatricies[i][j][k] = new float[d_model];
                     for (l = 0; l < d_model; l++){
                         m_keyMatricies[i][j][k][j] = 0;
                         v_keyMatricies[i][j][k][j] = 0;
                         m_quarryMatricies[i][j][k][j] = 0;
                         v_quarryMatricies[i][j][k][j] = 0;
-                        m_valueUpMatricies[i][j][k][j] = 0;
-                        v_valueUpMatricies[i][j][k][j] = 0;
-                        m_valueDownMatricies[i][j][k][j] = 0;
-                        v_valueDownMatricies[i][j][k][j] = 0;
+                    }
+                    for (l = 0; l < d_model; l++){
+                        m_valueMatricies[i][j][k][j] = 0;
+                        v_valueMatricies[i][j][k][j] = 0;
                     }
                 }
             }
@@ -604,19 +596,12 @@ void NoteTransformer::train(TrainingSettings settings){
                                 v_hat = 0 / (1 - pow(beta_2, time));
                                 quarryMatricies[i][j][k][l] = quarryMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                                 
-                                g = calculateGradientWithRespectTo(valueUpMatricies[i][j][k], l, settings, startIndex, endIndex);
-                                m_valueUpMatricies[i][j][k][l] = beta_1 * m_valueUpMatricies[i][j][k][l] + beta_3 * g;
-                                v_valueUpMatricies[i][j][k][l] = beta_2 * v_valueUpMatricies[i][j][k][l] + beta_4 * pow(g, 2);
+                                g = calculateGradientWithRespectTo(valueMatricies[i][j][k], l, settings, startIndex, endIndex);
+                                m_valueMatricies[i][j][k][l] = beta_1 * m_valueMatricies[i][j][k][l] + beta_3 * g;
+                                v_valueMatricies[i][j][k][l] = beta_2 * v_valueMatricies[i][j][k][l] + beta_4 * pow(g, 2);
                                 m_hat = 0 / (1 - pow(beta_1, time));
                                 v_hat = 0 / (1 - pow(beta_2, time));
-                                valueUpMatricies[i][j][k][l] = valueUpMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
-
-                                g = calculateGradientWithRespectTo(valueDownMatricies[i][j][k], l, settings, startIndex, endIndex);
-                                m_valueDownMatricies[i][j][k][l] = beta_1 * m_valueDownMatricies[i][j][k][l] + beta_3 * g;
-                                v_valueDownMatricies[i][j][k][l] = beta_2 * v_valueDownMatricies[i][j][k][l] + beta_4 * pow(g, 2);
-                                m_hat = 0 / (1 - pow(beta_1, time));
-                                v_hat = 0 / (1 - pow(beta_2, time));
-                                valueDownMatricies[i][j][k][l] = valueDownMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
+                                valueMatricies[i][j][k][l] = valueMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                             }
                         }
                     }
@@ -704,42 +689,34 @@ void NoteTransformer::train(TrainingSettings settings){
     // Attention matricies
     for (i = 0; i < layers; i++) {
         for (j = 0; j < headsPerLayer; j++) {
-            for (k = 0; k < d_attention; k++) {
+            for (k = 0; k < d_model; k++) {
                 delete[] m_keyMatricies[i][j][k];
                 delete[] v_keyMatricies[i][j][k];
                 delete[] m_quarryMatricies[i][j][k];
                 delete[] v_quarryMatricies[i][j][k];
-                delete[] m_valueUpMatricies[i][j][k];
-                delete[] v_valueUpMatricies[i][j][k];
-                delete[] m_valueDownMatricies[i][j][k];
-                delete[] v_valueDownMatricies[i][j][k];
+                delete[] m_valueMatricies[i][j][k];
+                delete[] v_valueMatricies[i][j][k];
             }
             delete[] m_keyMatricies[i][j];
             delete[] v_keyMatricies[i][j];
             delete[] m_quarryMatricies[i][j];
             delete[] v_quarryMatricies[i][j];
-            delete[] m_valueUpMatricies[i][j];
-            delete[] v_valueUpMatricies[i][j];
-            delete[] m_valueDownMatricies[i][j];
-            delete[] v_valueDownMatricies[i][j];
+            delete[] m_valueMatricies[i][j];
+            delete[] v_valueMatricies[i][j];
         }
         delete[] m_keyMatricies[i];
         delete[] v_keyMatricies[i];
         delete[] m_quarryMatricies[i];
         delete[] v_quarryMatricies[i];
-        delete[] m_valueUpMatricies[i];
-        delete[] v_valueUpMatricies[i];
-        delete[] m_valueDownMatricies[i];
-        delete[] v_valueDownMatricies[i];
+        delete[] m_valueMatricies[i];
+        delete[] v_valueMatricies[i];
     }
     delete[] m_keyMatricies;
     delete[] v_keyMatricies;
     delete[] m_quarryMatricies;
     delete[] v_quarryMatricies;
-    delete[] m_valueUpMatricies;
-    delete[] v_valueUpMatricies;
-    delete[] m_valueDownMatricies;
-    delete[] v_valueDownMatricies;
+    delete[] m_valueMatricies;
+    delete[] v_valueMatricies;
 
     // Unembedding
     for (i = 0; i < keyRange + velocityRange + 3; i++) {
