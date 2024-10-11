@@ -46,8 +46,7 @@ private:
     //Attention matricies
     float**** quarryMatricies;
     float**** keyMatricies;
-    float**** valueUpMatricies;
-    float**** valueDownMatricies;
+    float**** valueMatricies;
 
     //Unembedding
     float** unembeddingMatrix;
@@ -56,7 +55,7 @@ private:
     int softmaxTemperature;
     int d_embedding;
     int d_attention;
-    int sqrtD_k;
+    int attentionScalingFactor;
     int outputMatrixRows;
 
 public:
