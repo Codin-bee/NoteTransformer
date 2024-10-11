@@ -47,15 +47,14 @@ float** MathUtils::multiplyMatricies(float** matrixA, int columnsA, int rowsA, f
             matrixC[i][j] = 0;
         }
     }
-
+    
     for (int i = 0; i < rowsA; i++) {
         for (int j = 0; j < columnsB; j++) {
             for (int k = 0; k < columnsA; k++) {
-                matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
+                matrixC[i][j] += matrixA[i][k] * matrixB[j][k];
             }
         }
     }
-
     return matrixC;
 }
 
