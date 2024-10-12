@@ -37,18 +37,18 @@ void FileUtils::registerTransformerToDestruct(NoteTransformer transformer){
     transformers.push_back(transformer);
 }
 
-void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int collums, int rows){
+void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int columns, int rows){
     ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
     }
 
-    outFile << collums << " " << rows;
+    outFile << rows << " " << columns;
 
-    for (int i = 0; i < collums; i++){
+    for (int i = 0; i < rows; i++){
         outFile << "\n";
-        for (int j = 0; j < rows; j++){
+        for (int j = 0; j < columns; j++){
             outFile << matrix[i][j] << " ";
         }
     }
@@ -56,19 +56,18 @@ void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int
     outFile.close();
 }
 
-
-void FileUtils::saveIntMatrixToFiles(std::string fileName, int** matrix, int collums, int rows){
+void FileUtils::saveIntMatrixToFiles(std::string fileName, int** matrix, int columns, int rows){
     ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
     }
 
-    outFile << collums << " " << rows;
+    outFile << rows << " " << columns;
 
-    for (int i = 0; i < collums; i++){
+    for (int i = 0; i < rows; i++){
         outFile << "\n";
-        for (int j = 0; j < rows; j++){
+        for (int j = 0; j < columns; j++){
             outFile << matrix[i][j] << " ";
         }
     }
@@ -99,16 +98,16 @@ float** FileUtils::readFloatMatrixFromFile(string fileName) {
         throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
     }
 
-    int collums, rows;
-    inFile >> collums >> rows;
+    int columns, rows;
+    inFile >> rows >> columns;
 
-    float** matrix = new float*[collums];
-    for (int i = 0; i < collums; ++i) {
-        matrix[i] = new float[rows];
+    float** matrix = new float*[rows];
+    for (int i = 0; i < rows; ++i) {
+        matrix[i] = new float[columns];
     }
 
-    for (int i = 0; i < collums; ++i) {
-        for (int j = 0; j < rows; ++j) {
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
             inFile >> matrix[i][j];
         }
     }
@@ -116,7 +115,6 @@ float** FileUtils::readFloatMatrixFromFile(string fileName) {
     inFile.close();
     return matrix;
 }
-
 
 int** FileUtils::readIntMatrixFromFile(string fileName) {
     int i;
@@ -127,15 +125,15 @@ int** FileUtils::readIntMatrixFromFile(string fileName) {
     }
 
     int rows, columns;
-    inFile >> columns >> rows;
+    inFile >> rows >> columns;
 
-    int** matrix = new int*[columns];
-    for (i = 0; i < columns; ++i) {
-        matrix[i] = new int[rows];
+    int** matrix = new int*[rows];
+    for (i = 0; i < rows; ++i) {
+        matrix[i] = new int[columns];
     }
 
-    for (i = 0; i < columns; ++i) {
-        for (int j = 0; j < rows; ++j) {
+    for (i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
             inFile >> matrix[i][j];
         }
     }
