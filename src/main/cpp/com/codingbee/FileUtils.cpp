@@ -37,7 +37,7 @@ void FileUtils::registerTransformerToDestruct(NoteTransformer transformer){
     transformers.push_back(transformer);
 }
 
-void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int columns, int rows){
+void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int rows, int columns){
     ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
@@ -56,7 +56,7 @@ void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int
     outFile.close();
 }
 
-void FileUtils::saveIntMatrixToFiles(std::string fileName, int** matrix, int columns, int rows){
+void FileUtils::saveIntMatrixToFiles(std::string fileName, int** matrix, int rows, int columns){
     ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
