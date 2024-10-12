@@ -48,6 +48,10 @@ private:
     float**** keyMatricies;
     float**** valueMatricies;
 
+    //Layer normalization
+    float** betas;
+    float** gamas;
+
     //Unembedding
     float** unembeddingMatrix;
 
@@ -104,35 +108,37 @@ public:
 
     private:
 
-    void connectLayer(float* originalVector, float* downscaledVector);
+    void connectLayer(float* originalVector, float*& downscaledVector);
 
     /// @brief processes given vector using feed forward network with two transformations: first one with bias, second one without it
     /// @param vector processed vector
     /// @param layer index of the transformer layer
-    void ffn(float* vector, int layer);
+    void ffn(float*& vector, int layer);
 
     /// @brief calculates changes which should be added to given embeddings in order to make them represent their actual meaning in the context
     /// @param theMatrix the embeddings
     /// @param outputMatrix matrix which the method writes all changes into
     /// @param layer index of the transformer layer
     /// @param headNo index of the attention matricies
-    void attentionHead(float** theMatrix, float** outputMatrix, int layer, int headNo);
+    void attentionHead(float** theMatrix, float**& outputMatrix, int layer, int headNo);
 
     /// @brief Adds the given changes proposed by the attention heads to the vector
     /// @param vector the vector, which the function writes into
     /// @param changes the changes proposed by the attention head
     /// @param tokeNo index of the vector in the processed matrix
-    void addChanges(float* vector, float*** changes, int tokenNo);
+    void addChanges(float*& vector, float*** changes, int tokenNo);
 
-    float calculateGradientWithRespectTo(float* array, int index, TrainingSettings settings, int startIndex, int endIndex);
+    void layerNormalizeVector(float*& vector, int layerNo);
+
+    float calculateGradientWithRespectTo(float*& array, int index, TrainingSettings settings, int startIndex, int endIndex);
 
     float** embeddMatrix(int** matrix);
 
-    float** unembeddMatrixAndDeleteOriginal(float** matrix);
+    float** unembeddMatrixAndDeleteOriginal(float**& matrix);
 
-    void normalizeOutputMatrix(float** matrix);
+    void normalizeOutputMatrix(float**& matrix);
 
-    void processAttention(float** matrix, int layer);
+    void processAttention(float**& matrix, int layer);
 
     void joinAndClearThreads(std::vector<thread>& threads);
     //Getters and setters
