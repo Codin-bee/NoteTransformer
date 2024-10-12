@@ -33,7 +33,7 @@ float** MathUtils::multiplySameSquareMatricies(float** matrixA, float** matrixB,
 }
 
 float** MathUtils::multiplyMatricies(float** matrixA, int columnsA, int rowsA, float** matrixB, int columnsB){
-    if (columnsA < 1 || columnsB < 0 || rowsA < 0){
+    if (columnsA < 1 || columnsB < 1 || rowsA < 1){
         throw Exception("All the matrix sizes have to be higher than 0", ExceptionType::INVALID_ARGUMENT);
     }
     if (matrixA == nullptr || matrixB == nullptr){
@@ -51,7 +51,7 @@ float** MathUtils::multiplyMatricies(float** matrixA, int columnsA, int rowsA, f
     for (int i = 0; i < rowsA; i++) {
         for (int j = 0; j < columnsB; j++) {
             for (int k = 0; k < columnsA; k++) {
-                matrixC[i][j] += matrixA[i][k] * matrixB[j][k];
+                matrixC[i][j] += matrixA[i][k] * matrixB[k][j];
             }
         }
     }
