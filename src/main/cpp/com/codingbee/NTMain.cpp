@@ -6,17 +6,16 @@
 using namespace std;
 
 int main(){
-    cout << "NOTE TRANSFORMER TRAINING" << "\n" << 0.021;
+    cout << "NOTE TRANSFORMER TRAINING" << "\n";
     cout << "Randomly initialize the transformer?" << "\n";
     system("pause");
     NoteTransformer transformer(128, 4, 2, 16, 16, 2, 2, 2, 64, 32, 64);
-    transformer.randomInit();
+    //transformer.randomInit();
     //cout << "Done \n" << "Test saving and initialization from files? \n";
-    //system("pause");
     try{
     //transformer.save("C:/Users/theco/NoteTransformers/No1");
     //transformer.~NoteTransformer();
-    //transformer.init("C:/Users/theco/NoteTransformers/No1");
+    transformer.init("C:/Users/theco/NoteTransformers/No1");
     cout << "The model has been initialized with " << transformer.getNumberOfParameters() << " parameters \n";
     cout << "Start the training? \n";
     system ("pause");
@@ -30,9 +29,10 @@ int main(){
     settings.setBeta_2(0.98);
     settings.setEpsilon(0.00000001);
 
-    int** processedValues = FileUtils::readIntMatrixFromFile("C:\\Users\\theco\\NoteTransformers\\Datasets\\haydn1\\input0.txt");
+    int** processedValues = FileUtils::readIntMatrixFromFile("C:\\Users\\theco\\NoteTransformers\\Datasets\\haydn1\\input0");
     cout << "Loading fine \n";
     float** result =  transformer.process(processedValues);
+    system("pause");
     for (int i = 0; i < 128; i++){
         for (int j = 0; j < 5; j++){
             cerr << result[i][j] << " ";
@@ -40,13 +40,7 @@ int main(){
         cerr << "\n";
     }
     //transformer.train(settings);
-    cerr << "\n \n SO";
-    for (int i = 0; i < 128; i++){
-        for (int j = 0; j < 5; j++){
-            cerr << processedValues[i][j] << " ";
-        }
-        cerr << "\n";
-    }
+
     }catch (Exception e){
         cerr << e.getMessage();
     }catch(const std::exception& e)

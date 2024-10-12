@@ -118,7 +118,7 @@ void NoteTransformer::attentionHead(float** theMatrix, float**& outputMatrix, in
             for (int j = 0; j < contextSize; j++){
                 float* products = MathUtils::multiplyVectors(quarries[i], keys[j], d_attention);
                 dotProducts[i][j] = MathUtils::addVectorElements(products, d_attention);
-                            //dotProducts[i][j] *= attentionScalingFactor;
+                //dotProducts[i][j] *= attentionScalingFactor;
                 delete[] products;
             }
         }
@@ -136,7 +136,14 @@ void NoteTransformer::attentionHead(float** theMatrix, float**& outputMatrix, in
         for (int i = 0; i < contextSize; i++){
             //MathUtils::applySoftmax(dotProducts[i], contextSize, softmaxTemperature);
         }
-
+        cerr << "\n \n DOTS \n";
+        for (int i = 0; i < contextSize; i++){
+            for (int j = 0; j < d_model; j++){
+                cerr << dotProducts[i][j];
+            }
+            cerr << "\n";
+        }
+        system("pause");
         //Calculating the changes to embeddings
         outputMatrix = MathUtils::multiplyMatricies(dotProducts, contextSize, contextSize, values, d_model);
         cerr << "\n \n" << layerNo << "\n";
@@ -878,9 +885,6 @@ void NoteTransformer::normalizeOutputMatrix(float**& matrix){
 
 void NoteTransformer::processAttention(float**& matrix, int layer){
     float*** receivedChanges = new float**[headsPerLayer];
-    for (int i = 0; i < headsPerLayer; i++){
-        receivedChanges[i] = nullptr;
-    }
             //vector<thread> threads;
         for (int i = 0; i < headsPerLayer; i++) {
         //                threads.push_back(
@@ -983,8 +987,8 @@ void NoteTransformer::save(string dirPath){
         try{
         std::filesystem::create_directories(dirPath);
         //Embedding matricies
-        FileUtils::saveFloatMatrixToFiles(dirPath + "/key_embedding", keyEmbeddingMatrix, keyRange, d_keyEmbedding);
-        FileUtils::saveFloatMatrixToFiles(dirPath + "/velocity_embedding", velocityEmbeddingMatrix, velocityRange, d_velocityEmbedding);
+        FileUtils::saveMatrixToFiles(dirPath + "/key_embedding", keyEmbeddingMatrix, keyRange, d_keyEmbedding);
+        FileUtils::saveMatrixToFiles(dirPath + "/velocity_embedding", velocityEmbeddingMatrix, velocityRange, d_velocityEmbedding);
         //Embedding alphas
         FileUtils::saveFloatVectorToFiles(dirPath + "/prev_note_alphas", prevNoteAlphas, d_prevNoteEmbedding);
         FileUtils::saveFloatVectorToFiles(dirPath + "/next_note_alphas", nextNoteAlphas, d_nextNoteEmbedding);
@@ -992,32 +996,32 @@ void NoteTransformer::save(string dirPath){
         //Connecting layer
         string currentPath = dirPath + "/connecting_layer";
         std::filesystem::create_directory(currentPath);
-        FileUtils::saveFloatMatrixToFiles(currentPath + "/connection0", connectingLayerWeights[0], d_connectingLayer, d_embedding);
-        FileUtils::saveFloatMatrixToFiles(currentPath + "/connection1", connectingLayerWeights[1], d_model, d_connectingLayer);
+        FileUtils::saveMatrixToFiles(currentPath + "/connection0", connectingLayerWeights[0], d_connectingLayer, d_embedding);
+        FileUtils::saveMatrixToFiles(currentPath + "/connection1", connectingLayerWeights[1], d_model, d_connectingLayer);
         FileUtils::saveFloatVectorToFiles(currentPath + "/biases", connectingLayerBiases, d_connectingLayer);
         //FFN weights and biases
         for (i = 0; i < layers; i++){
             currentPath = dirPath + "/layers/layer" + to_string(i) + "/ffn_weights";
             std::filesystem::create_directories(currentPath);
-            FileUtils::saveFloatMatrixToFiles(currentPath + "/connection0", ffnWeights[i][0], d_ffn, d_model);
-            FileUtils::saveFloatMatrixToFiles(currentPath + "/connection1", ffnWeights[i][1], d_model, d_ffn);
+            FileUtils::saveMatrixToFiles(currentPath + "/connection0", ffnWeights[i][0], d_ffn, d_model);
+            FileUtils::saveMatrixToFiles(currentPath + "/connection1", ffnWeights[i][1], d_model, d_ffn);
         }
-        FileUtils::saveFloatMatrixToFiles(dirPath + "/ffn_biases", ffnBiases, layers, d_ffn);
+        FileUtils::saveMatrixToFiles(dirPath + "/ffn_biases", ffnBiases, layers, d_ffn);
         //Attention matricies
         for (i = 0; i < layers; i++){
             for (j = 0; j < headsPerLayer; j++){
                 currentPath = dirPath + "/layers/layer" + to_string(i) + "/attention/head" + to_string(j);
                 std::filesystem::create_directories(currentPath);
-                FileUtils::saveFloatMatrixToFiles(currentPath + "/keyMatrix", keyMatricies[i][j], d_attention, d_model);
-                FileUtils::saveFloatMatrixToFiles(currentPath + "/quarryMatrix", quarryMatricies[i][j], d_attention, d_model);
-                FileUtils::saveFloatMatrixToFiles(currentPath + "/valueMatrix", valueMatricies[i][j], d_model, d_model);
+                FileUtils::saveMatrixToFiles(currentPath + "/keyMatrix", keyMatricies[i][j], d_model, d_attention);
+                FileUtils::saveMatrixToFiles(currentPath + "/quarryMatrix", quarryMatricies[i][j], d_model, d_attention);
+                FileUtils::saveMatrixToFiles(currentPath + "/valueMatrix", valueMatricies[i][j], d_model, d_model);
             }
         }
         //Layer normalization
-        FileUtils::saveFloatMatrixToFiles(dirPath + "/betas", betas, layers, d_model);
-        FileUtils::saveFloatMatrixToFiles(dirPath + "/gamas", gamas, layers, d_model);
+        FileUtils::saveMatrixToFiles(dirPath + "/betas", betas, layers, d_model);
+        FileUtils::saveMatrixToFiles(dirPath + "/gamas", gamas, layers, d_model);
         //Unembedding
-        FileUtils::saveFloatMatrixToFiles(dirPath + "/unembedding", unembeddingMatrix, keyRange + velocityRange + 3, d_model);
+        FileUtils::saveMatrixToFiles(dirPath + "/unembedding", unembeddingMatrix, keyRange + velocityRange + 3, d_model);
         }catch (Exception e){
             cerr << e.getMessage() << "\n";
         }catch(const std::exception& e)
