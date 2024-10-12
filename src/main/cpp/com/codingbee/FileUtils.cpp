@@ -9,35 +9,27 @@ using namespace std;
 
 vector<NoteTransformer> FileUtils::transformers;
 
-int FileUtils::getNumberOfFilesInDir(string directoryPath){
-        DIR *dp;
-        int i = 0;
-        struct dirent *ep;     
-        dp = opendir ("./");
+int FileUtils::getNumberOfFilesInDir(const string& directoryPath) {
+    DIR *dp;
+    int fileCount = 0;
+    struct dirent *ep;     
+    dp = opendir(directoryPath.c_str());
 
-        if (dp != NULL){
-            while (ep = readdir (dp)){
-                i++;
-                }
-        closedir (dp);
-        }else{
-        cerr << "Exception: the directory " + directoryPath + " could not been open.";
+    if (dp != NULL) {
+        while ((ep = readdir(dp)) != NULL) {
+            if (std::string(ep->d_name) != "." && std::string(ep->d_name) != "..") {
+                fileCount++;
+            }
         }
-        return i;
+        closedir(dp);
+    } else {
+        std::cerr << "Exception: the directory " << directoryPath << " could not be opened.\n";
     }
-
-void FileUtils::callRegisteredDestructors(){
-    for (int i = 0; i < transformers.size(); i++){
-        transformers.back().~NoteTransformer();
-        transformers.pop_back();
-    }
+    return fileCount;
 }
 
-void FileUtils::registerTransformerToDestruct(NoteTransformer transformer){
-    transformers.push_back(transformer);
-}
 
-void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int rows, int columns){
+void FileUtils::saveMatrixToFiles(std::string fileName, float** matrix, int rows, int columns){
     ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
@@ -56,7 +48,7 @@ void FileUtils::saveFloatMatrixToFiles(std::string fileName, float** matrix, int
     outFile.close();
 }
 
-void FileUtils::saveIntMatrixToFiles(std::string fileName, int** matrix, int rows, int columns){
+void FileUtils::saveMatrixToFiles(std::string fileName, int** matrix, int rows, int columns){
     ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
