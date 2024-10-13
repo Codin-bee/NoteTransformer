@@ -28,7 +28,7 @@ class MathUtils{
     /// @param vector Vector of real numbers
     /// @param vectorLength Length of the vector
     /// @param temperature The temperature variable for the function, if you do not know what you are doing keep it as 1
-    static void applySoftmax(float* vector, int vectorLength, int temperature);
+    static void applySoftmax(float*& vector, int vectorLength, int temperature);
 
     /// @brief Applies leaky ReLU activation function to given number
     /// @param n The number to activate

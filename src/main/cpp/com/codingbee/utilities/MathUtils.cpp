@@ -58,7 +58,7 @@ float** MathUtils::multiplyMatricies(float** matrixA, int rowsA, int columnsA, f
     return matrixC;
 }
 
-void MathUtils::applySoftmax(float* vector, int vectorLength, int temperature){
+void MathUtils::applySoftmax(float*& vector, int vectorLength, int temperature){
     if(vectorLength < 1){
         throw Exception("The vector length has to be higher than 0", ExceptionType::INVALID_ARGUMENT);
     }
@@ -75,6 +75,7 @@ void MathUtils::applySoftmax(float* vector, int vectorLength, int temperature){
             maxVal = vector[i];
         }
     }
+    cout << "Max value: " << maxVal << "\n";
 
     float sum = 0;
     for (int i = 0; i < vectorLength; i++) {
