@@ -59,8 +59,8 @@ private:
     int softmaxTemperature;
     int d_embedding;
     int d_attention;
-    int attentionScalingFactor;
-    int outputMatrixRows;
+    float attentionScalingFactor;
+    int outputMatrixColumns;
 
 public:
 
