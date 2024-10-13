@@ -32,7 +32,7 @@ float** MathUtils::multiplySameSquareMatricies(float** matrixA, float** matrixB,
     return matrixC;
 }
 
-float** MathUtils::multiplyMatricies(float** matrixA, int columnsA, int rowsA, float** matrixB, int columnsB){
+float** MathUtils::multiplyMatricies(float** matrixA, int rowsA, int columnsA, float** matrixB, int columnsB){
     if (columnsA < 1 || columnsB < 1 || rowsA < 1){
         throw Exception("All the matrix sizes have to be higher than 0", ExceptionType::INVALID_ARGUMENT);
     }

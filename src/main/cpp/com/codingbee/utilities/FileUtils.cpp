@@ -27,7 +27,6 @@ int FileUtils::getNumberOfFilesInDir(const string& directoryPath) {
     return fileCount;
 }
 
-
 void FileUtils::saveMatrixToFiles(std::string fileName, float** matrix, int rows, int columns){
     ofstream outFile(fileName + ".txt");
         

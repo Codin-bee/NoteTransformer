@@ -100,9 +100,9 @@ float** NoteTransformer::process(int** matrixToProcess) {
 
 void NoteTransformer::attentionHead(float** theMatrix, float**& outputMatrix, int layerNo, int headNo){
         //Key, quarry and value calculation
-        float** quarries = MathUtils::multiplyMatricies(theMatrix, d_model, contextSize, quarryMatricies[layerNo][headNo], d_attention);
-        float** keys =  MathUtils::multiplyMatricies(theMatrix, d_model, contextSize, keyMatricies[layerNo][headNo], d_attention);
-        float** values = MathUtils::multiplyMatricies(theMatrix, d_model, contextSize, valueMatricies[layerNo][headNo], d_model);
+        float** quarries = MathUtils::multiplyMatricies(theMatrix, contextSize, d_model, quarryMatricies[layerNo][headNo], d_attention);
+        float** keys =  MathUtils::multiplyMatricies(theMatrix, contextSize, d_model, keyMatricies[layerNo][headNo], d_attention);
+        float** values = MathUtils::multiplyMatricies(theMatrix, contextSize, d_model, valueMatricies[layerNo][headNo], d_model);
         
         float** dotProducts = new float*[contextSize];
         for (int i = 0; i < contextSize; i++){
@@ -834,7 +834,7 @@ float** NoteTransformer::unembeddMatrixAndDeleteOriginal(float**& matrix){
             finalOutput[j][k] = 0;
         }
     }
-    finalOutput = MathUtils::multiplyMatricies(matrix, d_model, contextSize, unembeddingMatrix, keyRange + velocityRange + 3);
+    finalOutput = MathUtils::multiplyMatricies(matrix, contextSize, d_model, unembeddingMatrix, keyRange + velocityRange + 3);
     for (int j = 0; j < contextSize; j++){
         delete[] matrix[j];
     }

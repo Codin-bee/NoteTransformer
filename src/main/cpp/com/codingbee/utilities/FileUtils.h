@@ -13,6 +13,7 @@ class FileUtils{
         /// @return Number of files in given directory
         static int getNumberOfFilesInDir(const std::string& directoryPath);
 
+
         //Float matrix
 
         /// @brief Saves given matrix to given file
@@ -27,6 +28,7 @@ class FileUtils{
         /// @return The matrix containing values from the file
         static float** readFloatMatrixFromFile(std::string fileName);
 
+
         //Int matrix
 
         /// @brief Saves given matrix to given file
@@ -40,6 +42,7 @@ class FileUtils{
         /// @param fileName The name of the file or path to it
         /// @return The matrix containing the values from the file
         static int** readIntMatrixFromFile(std::string fileName);
+
 
         //Float vector
         
