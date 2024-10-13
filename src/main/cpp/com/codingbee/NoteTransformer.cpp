@@ -28,11 +28,11 @@ NoteTransformer::NoteTransformer(int context, int layerCount, int headsInLayers,
         d_attention = d_model / headsPerLayer;
         attentionScalingFactor = 1 / sqrt(d_attention);
         softmaxTemperature = 1;
-        outputMatrixRows = keyRange + velocityRange + 3;
+        outputMatrixColumns = keyRange + velocityRange + 3;
     }
 
 float** NoteTransformer::process(int** matrixToProcess) {
-            //std::vector<std::thread> threads;
+    std::vector<std::thread> threads;
     // Embedding
     float** embeddedMatrix = embeddMatrix(matrixToProcess);
     cout << "EMBEDDING FINISHED \n";
@@ -45,17 +45,15 @@ float** NoteTransformer::process(int** matrixToProcess) {
         }
     }
     for (int i = 0; i < contextSize; i++) {
-//        threads.push_back(
-//            std::thread([this, i, &embeddedMatrix, &processedMatrix]() {
-//                this->connectLayer(embeddedMatrix[i], processedMatrix[i]);
-//            })
-//        );
-    connectLayer(embeddedMatrix[i], processedMatrix[i]);
+        threads.push_back(
+            std::thread([this, i, &embeddedMatrix, &processedMatrix]() {
+                this->connectLayer(embeddedMatrix[i], processedMatrix[i]);
+            })
+        );
     }
-            //joinAndClearThreads(threads);
+    joinAndClearThreads(threads);
 
     cerr << "CONNECTING FINISHED \n";
-    /*Check: connecting is consistent and outputs reseonable values ~ 0.5*/
     // Layers
     for (int i = 0; i < layers; i++) {
 
@@ -63,38 +61,35 @@ float** NoteTransformer::process(int** matrixToProcess) {
         processAttention(processedMatrix, i);
         cerr << "ATTENTION FINISHED FOR LAYER " << i << "\n";
         for (int j = 0; j < contextSize; j++){
-            for (int k = 0; k < d_model; k++){
-                cerr << processedMatrix[j][k];
-            }
-            cerr << "\n";
-        }
-        for (int j = 0; j < contextSize; j++){
             layerNormalizeVector(processedMatrix[j], i);
         }
         cerr << "NORMALIZATION FINISHED \n";
-        for (int j = 0; j < contextSize; j++){
-            for (int k = 0; k < d_model; k++){
-                cerr << processedMatrix[j][k];
-            }
-            cerr << "\n";
-        }
-        system("pause");
         // Feed forward networks
         for (int j = 0; j < contextSize; j++) {
             ffn(processedMatrix[j], i);
+            //cout << j << "\n";
 //            threads.push_back(
 //                std::thread([this, i, j, &processedMatrix]() {
 //                    this->ffn(processedMatrix[j], i);
 //                })
 //            );
         }
-                //joinAndClearThreads(threads);
+        joinAndClearThreads(threads);
         cout << "FFNS FINISHED FOR LAYER " << i << "\n";
     }
+    /*TRIPLE CHECKED: STABLE, CONSISTENT TO THIS POINT (idk ffns uk, they rae disabled now)*/
+    //for (int j = 0; j < contextSize; j++){
+            //for (int k = 0; k < d_model; k++){
+                //cout << processedMatrix[j][k] << " ";
+            //}
+            //cout << "\n";
+        //}
+    cout << "\n ALL TILL UNEMBEDDING \n";
+    system("pause");
     // Unembedding
-    float** finalOutput = unembeddMatrixAndDeleteOriginal(processedMatrix);
+    float** finalOutput = unembeddMatrixAndDeleteOriginal(processedMatrix);//Random giant values
     // Normalizing outputs
-    normalizeOutputMatrix(finalOutput);
+    normalizeOutputMatrix(finalOutput);//it is passed high value and softmax dies
     return finalOutput;
 }
 
@@ -118,7 +113,7 @@ void NoteTransformer::attentionHead(float** theMatrix, float**& outputMatrix, in
             for (int j = 0; j < contextSize; j++){
                 float* products = MathUtils::multiplyVectors(quarries[i], keys[j], d_attention);
                 dotProducts[i][j] = MathUtils::addVectorElements(products, d_attention);
-                //dotProducts[i][j] *= attentionScalingFactor;
+                dotProducts[i][j] *= attentionScalingFactor;
                 delete[] products;
             }
         }
@@ -127,32 +122,17 @@ void NoteTransformer::attentionHead(float** theMatrix, float**& outputMatrix, in
         for (int i = 0; i < contextSize; i++){
             for (int j = 0; j < contextSize; j++){
                 if (j < i){
-                    dotProducts[i][j] = 0.000000001;
+                    //dotProducts[i][j] = - 300;
                 }
             }
         }
         
         //Normalization
         for (int i = 0; i < contextSize; i++){
-            //MathUtils::applySoftmax(dotProducts[i], contextSize, softmaxTemperature);
+            MathUtils::applySoftmax(dotProducts[i], contextSize, softmaxTemperature);
         }
-        cerr << "\n \n DOTS \n";
-        for (int i = 0; i < contextSize; i++){
-            for (int j = 0; j < d_model; j++){
-                cerr << dotProducts[i][j];
-            }
-            cerr << "\n";
-        }
-        system("pause");
         //Calculating the changes to embeddings
         outputMatrix = MathUtils::multiplyMatricies(dotProducts, contextSize, contextSize, values, d_model);
-        cerr << "\n \n" << layerNo << "\n";
-        for (int i = 0; i < contextSize; i++){
-            for (int j = 0; j < d_model; j++){
-                cerr << outputMatrix[i][j];
-            }
-            cerr << "\n";
-        }
         
         //Deleting used variables
         for (int i = 0; i < contextSize; i++){
@@ -196,24 +176,19 @@ void NoteTransformer::ffn(float*& vector, int layer){
         for (i = 0; i < d_ffn; i++){
             neuronValue = 0;
             for (j = 0; j < d_model; j++){
-                cerr << j;
                 neuronValue += originalVector[j] * ffnWeights[layer][0][i][j];
             }
             hiddenVector[i] = MathUtils::leakyReLU(neuronValue + ffnBiases[layer][i]);
         }
-        cerr << "\n";
-        cerr << "1trans ok \n";
         delete[] originalVector;
         for (i = 0; i < d_model; i++){
             neuronValue = 0;
             for (j = 0; j < d_ffn; j++){
-                cerr << j;
                 neuronValue += hiddenVector[j] * ffnWeights[layer][1][i][j];
             }
             vector[i] = MathUtils::sigmoid(neuronValue);
         }
         delete[] hiddenVector;
-        cerr << "2trans ok \n";
     }
 
 void NoteTransformer::connectLayer(float* originalVector, float*& downscaledVector){
@@ -319,9 +294,9 @@ void NoteTransformer::allocateModelMemory(){
         }
 
         //Unembedding
-        unembeddingMatrix = new float*[keyRange + velocityRange + 3];
-        for (i = 0; i < keyRange + velocityRange + 3; i++){
-            unembeddingMatrix[i] = new float[d_model];
+        unembeddingMatrix = new float*[d_model];
+        for (i = 0; i < d_model; i++){
+            unembeddingMatrix[i] = new float[outputMatrixColumns];
         }
 
     }
@@ -829,8 +804,8 @@ float** NoteTransformer::embeddMatrix(int** matrix){
 float** NoteTransformer::unembeddMatrixAndDeleteOriginal(float**& matrix){
     float** finalOutput = new float*[contextSize];
     for (int j = 0; j < contextSize; j++) {
-        finalOutput[j] = new float[outputMatrixRows];
-        for (int k = 0; k < outputMatrixRows; k++) {
+        finalOutput[j] = new float[outputMatrixColumns];
+        for (int k = 0; k < outputMatrixColumns; k++) {
             finalOutput[j][k] = 0;
         }
     }
@@ -876,43 +851,39 @@ void NoteTransformer::normalizeOutputMatrix(float**& matrix){
         }
         delete[] tempArray;
 
-        // Timings (currently multiplication by 1000)
-        matrix[i][keyRange + velocityRange] = round(matrix[i][keyRange + velocityRange] * 1000);
-        matrix[i][keyRange + velocityRange + 1] = round(matrix[i][keyRange + velocityRange + 1] * 1000);
-        matrix[i][keyRange + velocityRange + 2] = round(matrix[i][keyRange + velocityRange + 2] * 1000);
+        // Timings (currently multiplication by 10)
+        matrix[i][keyRange + velocityRange] = round(matrix[i][keyRange + velocityRange] * 10);
+        matrix[i][keyRange + velocityRange + 1] = round(matrix[i][keyRange + velocityRange + 1] * 10);
+        matrix[i][keyRange + velocityRange + 2] = round(matrix[i][keyRange + velocityRange + 2] * 10);
     }
 }
 
 void NoteTransformer::processAttention(float**& matrix, int layer){
     float*** receivedChanges = new float**[headsPerLayer];
-            //vector<thread> threads;
-        for (int i = 0; i < headsPerLayer; i++) {
-        //                threads.push_back(
-        //                std::thread([this, &matrix, &receivedChanges, layer, i]() {
-        //                    this->attentionHead(matrix, receivedChanges[i], layer, i);
-        //                })
-        //            );
-            attentionHead(matrix, receivedChanges[i], layer, i);
+    vector<thread> threads;
+    for (int i = 0; i < headsPerLayer; i++) {
+        threads.push_back(
+            std::thread([this, &matrix, &receivedChanges, layer, i]() {
+                this->attentionHead(matrix, receivedChanges[i], layer, i);
+            })
+        );
+    }
+    joinAndClearThreads(threads);
+    for (int i = 0; i < contextSize; i++) {
+        threads.push_back(
+            std::thread([this, &receivedChanges, &matrix, i]() {
+                this->addChanges(matrix[i], receivedChanges, i);
+            })
+        );
+    }
+    joinAndClearThreads(threads);
+    for (int i = 0; i < headsPerLayer; i++){
+        for (int j = 0; j < contextSize; j++){
+            delete[] receivedChanges[i][j];
         }
-        cerr << "ALL HEADS FINISHED \n";
-                //joinAndClearThreads(threads);
-        for (int i = 0; i < contextSize; i++) {
-        //            threads.push_back(
-        //                std::thread([this, &receivedChanges, &matrix, i]() {
-        //                    this->addChanges(matrix[i], receivedChanges, i);
-        //                })
-        //            );
-            addChanges(matrix[i], receivedChanges, i);
-        }
-        cerr << " ALL CHANGES ADDED ";
-                //joinAndClearThreads(threads);
-        for (int i = 0; i < headsPerLayer; i++){
-            for (int j = 0; j < contextSize; j++){
-                delete[] receivedChanges[i][j];
-            }
-            delete[] receivedChanges[i];
-        }
-        delete[] receivedChanges;
+        delete[] receivedChanges[i];
+    }
+    delete[] receivedChanges;
 }
 
 void NoteTransformer::layerNormalizeVector(float*& vector, int layerNo){
@@ -1021,7 +992,7 @@ void NoteTransformer::save(string dirPath){
         FileUtils::saveMatrixToFiles(dirPath + "/betas", betas, layers, d_model);
         FileUtils::saveMatrixToFiles(dirPath + "/gamas", gamas, layers, d_model);
         //Unembedding
-        FileUtils::saveMatrixToFiles(dirPath + "/unembedding", unembeddingMatrix, keyRange + velocityRange + 3, d_model);
+        FileUtils::saveMatrixToFiles(dirPath + "/unembedding", unembeddingMatrix, d_model, outputMatrixColumns);
         }catch (Exception e){
             cerr << e.getMessage() << "\n";
         }catch(const std::exception& e)
@@ -1138,10 +1109,10 @@ void NoteTransformer::randomInit(){
         }
 
         //Unembedding
-        variation = sqrt(6.0f /(float)keyRange + (float)velocityRange + 3.0f);
+        variation = sqrt(6.0f /(float) outputMatrixColumns);
         std::normal_distribution<float> distribution11(-variation, variation);
-        for (i = 0; i < keyRange + velocityRange + 3; i++){
-            for (j = 0; j < d_model; j++){
+        for (i = 0; i < d_model; i++){
+            for (j = 0; j < outputMatrixColumns; j++){
                 unembeddingMatrix[i][j] = distribution11(generator);
             }
         }
@@ -1214,7 +1185,7 @@ int NoteTransformer::getNumberOfParameters(){
     params += layers * d_model * 2;
 
     //Unembedding
-    params += d_model * (keyRange + velocityRange + 3);
+    params += d_model * outputMatrixColumns;
     return params;
 }
 
