@@ -1,5 +1,5 @@
 # Note Transformer
-A custom-built and modified Transformer architecture, implemented from scratch with the goal of reducing the number of parameters while maintaining performance. Custom embeddings were developed, and a specialized layer was added to enhance the model's ability to generate simple piano music. Certain components of the architecture were simplified to further decrease parameter count, optimizing it for more efficient training. While initially trained on a single dataset, future iterations will explore the use of multiple datasets to improve generalization and music quality.
+A custom Transformer architecture designed to generate simple piano music, built from scratch to reduce the number of parameters while maintaining high performance. It features custom embeddings, a specialized layer for handling timing, and a custom unembedding process. Future updates will incorporate multiple datasets to improve generalization and music quality.
 
 ## Coventions
 
