@@ -3,8 +3,9 @@
 #include <random>
 #include <filesystem>
 #include "Exception.h"
-#include <thread>
-#include <chrono>
+#include "MemoryUtils.h"
+#include <iostream>
+#include "MathUtils.h"
 
 using namespace std;
 
@@ -201,16 +202,9 @@ void NoteTransformer::connectLayer(float* originalVector, float*& downscaledVect
     }
 
 void NoteTransformer::allocateModelMemory(){
-        int i, j, k;
         //Embedding matricies
-        keyEmbeddingMatrix = new float*[keyRange];
-        for (i = 0; i < keyRange; i++){
-            keyEmbeddingMatrix[i] = new float[d_keyEmbedding];
-        }
-        velocityEmbeddingMatrix = new float*[velocityRange];
-        for (i= 0; i < velocityRange; i++){
-            velocityEmbeddingMatrix[i] = new float[d_velocityEmbedding];
-        }
+        MemoryUtils::allocateMatrix(keyEmbeddingMatrix, keyRange, d_keyEmbedding);
+        MemoryUtils::allocateMatrix(velocityEmbeddingMatrix, velocityRange, d_velocityEmbedding);
 
         //Embedding aplhas
         prevNoteAlphas = new float[d_prevNoteEmbedding];
@@ -220,11 +214,11 @@ void NoteTransformer::allocateModelMemory(){
         //Connecting layer
         connectingLayerWeights = new float**[2];
         connectingLayerWeights[0] = new float*[d_connectingLayer];
-        for (i = 0; i < d_connectingLayer; i++){
+        for (int i = 0; i < d_connectingLayer; i++){
                 connectingLayerWeights[0][i] = new float[d_embedding];
         }
         connectingLayerWeights[1] = new float*[d_model];
-        for (i = 0; i < d_model; i++){
+        for (int i = 0; i < d_model; i++){
             connectingLayerWeights[1][i] = new float[d_connectingLayer];
         }
         connectingLayerBiases = new float[d_connectingLayer];
@@ -232,14 +226,14 @@ void NoteTransformer::allocateModelMemory(){
         //FFN weights and biases
         ffnWeights = new float***[layers];
         ffnBiases = new float*[layers];
-        for (i = 0; i < layers; i++){
+        for (int i = 0; i < layers; i++){
             ffnWeights[i] = new float**[2];
             ffnWeights[i][0] = new float*[d_ffn];
-            for (j = 0; j < d_ffn; j++){
+            for (int j = 0; j < d_ffn; j++){
                 ffnWeights[i][0][j] = new float[d_model];
             }
             ffnWeights[i][1] = new float*[d_model];
-            for (j = 0; j < d_model; j++){
+            for (int j = 0; j < d_model; j++){
                 ffnWeights[i][1][j] =  new float[d_ffn];
             }
             ffnBiases[i] = new float[d_ffn];
@@ -250,33 +244,24 @@ void NoteTransformer::allocateModelMemory(){
         quarryMatricies = new float ***[layers];
         valueMatricies = new float ***[layers];
 
-        for (i = 0; i < layers; i++){
+        for (int i = 0; i < layers; i++){
             keyMatricies[i] = new float **[headsPerLayer];
             quarryMatricies[i] = new float **[headsPerLayer];
             valueMatricies[i] = new float **[headsPerLayer];
-            for (j = 0; j < headsPerLayer; j++){
-                keyMatricies[i][j] = new float *[d_model];
-                quarryMatricies[i][j] = new float *[d_model];
-                valueMatricies[i][j] = new float *[d_model];
-                for (k = 0; k < d_model; k++){
-                    keyMatricies[i][j][k] = new float [d_attention];
-                    quarryMatricies[i][j][k] = new float [d_attention];
-                    valueMatricies[i][j][k] = new float [d_model];
-                }
+            for (int j = 0; j < headsPerLayer; j++){
+            MemoryUtils::allocateMatrix(keyMatricies[i][j], d_model, d_attention);
+            MemoryUtils::allocateMatrix(quarryMatricies[i][j], d_model, d_attention);
+            MemoryUtils::allocateMatrix(valueMatricies[i][j], d_model, d_model);
             }
         }
 
         //Layer normalization
-        betas = new float*[layers];
-        gamas = new float*[layers];
-        for (int i = 0; i < layers; i ++){
-            betas[i] = new float[d_model];
-            gamas[i] = new float[d_model];
-        }
+        MemoryUtils::allocateMatrix(betas, layers, d_model);
+        MemoryUtils::allocateMatrix(gamas, layers, d_model);
 
         //Unembedding
         unembeddingMatrix = new float*[d_model];
-        for (i = 0; i < d_model; i++){
+        for (int i = 0; i < d_model; i++){
             unembeddingMatrix[i] = new float[outputMatrixColumns];
         }
 
@@ -289,27 +274,14 @@ void NoteTransformer::train(TrainingSettings settings){
 
 #pragma region  Allocation
         //Embedding matricies
-        float** m_keyEmbedding = new float*[keyRange];
-        float** v_keyEmbedding = new float*[keyRange];
-        for (i = 0; i < keyRange; i++){
-            m_keyEmbedding[i] = new float[d_keyEmbedding];
-            v_keyEmbedding[i] = new float[d_keyEmbedding];
-            for (j = 0; j < d_keyEmbedding; j++){
-                m_keyEmbedding[i][j] = 0;
-                v_keyEmbedding[i][j] = 0;
-            }
-        }
-        
-        float** m_velocityEmbedding = new float*[velocityRange];
-        float** v_velocityEmbedding = new float*[velocityRange];
-        for (i = 0; i < velocityRange; i++){
-            m_velocityEmbedding[i] = new float[d_velocityEmbedding];
-            v_velocityEmbedding[i] = new float[d_velocityEmbedding];
-            for (j = 0; j < d_velocityEmbedding; j++){
-                m_velocityEmbedding[i][j] = 0;
-                v_velocityEmbedding[i][j] = 0;
-            }
-        }
+        float** m_keyEmbedding;
+        float** v_keyEmbedding;
+        MemoryUtils::allocateMatrixWithZeros(m_keyEmbedding, keyRange, d_keyEmbedding);
+        MemoryUtils::allocateMatrixWithZeros(v_keyEmbedding, keyRange, d_keyEmbedding);
+        float** m_velocityEmbedding;
+        float** v_velocityEmbedding;
+        MemoryUtils::allocateMatrixWithZeros(m_velocityEmbedding, velocityRange, d_velocityEmbedding);
+        MemoryUtils::allocateMatrixWithZeros(v_velocityEmbedding, velocityRange, d_velocityEmbedding);
 
         //Embedding aplhas
         float* m_prevNoteAlpha = new float[d_prevNoteEmbedding];
@@ -318,14 +290,12 @@ void NoteTransformer::train(TrainingSettings settings){
             m_prevNoteAlpha[i] = 0;
             v_prevNoteAlpha[i] = 0;
         } 
-
         float* m_nextNoteAlpha = new float[d_nextNoteEmbedding];
         float* v_nextNoteAlpha = new float[d_nextNoteEmbedding];
         for (i = 0; i < d_nextNoteEmbedding; i++){
             m_nextNoteAlpha[i] = 0;
             v_nextNoteAlpha[i] = 0;
         } 
-
         float* m_absolutePos = new float[d_absolutePosition];
         float* v_absolutePos = new float[d_absolutePosition];
         for (i = 0; i < d_absolutePosition; i++){
@@ -336,28 +306,14 @@ void NoteTransformer::train(TrainingSettings settings){
         //Connecting layer
         float*** m_connectingLayerWeights= new float**[2];
         float*** v_connectingLayerWeights = new float**[2];
-        m_connectingLayerWeights[0]= new float*[d_connectingLayer];
-        v_connectingLayerWeights[0] = new float*[d_connectingLayer];
-        m_connectingLayerWeights[1]= new float*[d_model];
-        v_connectingLayerWeights[1] = new float*[d_model];
-
-        for (i = 0; i < d_connectingLayer; i++){
-            m_connectingLayerWeights[0][i] = new float[d_embedding];
-            v_connectingLayerWeights[0][i] = new float[d_embedding];
-            for (j = 0; j < d_embedding; j++){
-                m_connectingLayerWeights[0][i][j] = 0;
-                v_connectingLayerWeights[0][i][j] = 0;
-            }
-        }
-        for (i = 0; i < d_model; i++){
-            m_connectingLayerWeights[1][i] = new float[d_connectingLayer];
-            v_connectingLayerWeights[1][i] = new float[d_connectingLayer];
-            for (j = 0; j < d_connectingLayer; j++){
-                m_connectingLayerWeights[1][i][j] = 0;
-                v_connectingLayerWeights[1][i][j] = 0;
-            }
-        }
-
+        m_connectingLayerWeights[0];
+        v_connectingLayerWeights[0];
+        m_connectingLayerWeights[1];
+        v_connectingLayerWeights[1];
+        MemoryUtils::allocateMatrixWithZeros(m_connectingLayerWeights[0], d_connectingLayer, d_embedding);
+        MemoryUtils::allocateMatrixWithZeros(v_connectingLayerWeights[0], d_connectingLayer, d_embedding);
+        MemoryUtils::allocateMatrixWithZeros(m_connectingLayerWeights[1], d_model, d_connectingLayer);
+        MemoryUtils::allocateMatrixWithZeros(v_connectingLayerWeights[1], d_model, d_connectingLayer);
         float* m_connectingLayerBiases = new float[d_connectingLayer];
         float* v_connectingLayerBiases = new float[d_connectingLayer];
         for (i = 0; i < d_connectingLayer; i++){
@@ -368,43 +324,20 @@ void NoteTransformer::train(TrainingSettings settings){
         //FFN weights and biases
         float**** m_ffnWeights= new float***[layers];
         float**** v_ffnWeights = new float***[layers];
-        float** m_ffnBiases = new float*[layers];
-        float** v_ffnBiases = new float*[layers];
         for (i = 0; i < layers; i++){
             m_ffnWeights[i] = new float**[2];
             v_ffnWeights[i] = new float**[2];
-
-            m_ffnWeights[i][0]= new float*[d_ffn];
-            v_ffnWeights[i][0] = new float*[d_ffn];
-
-            m_ffnWeights[i][1] = new float*[d_model];
-            v_ffnWeights[i][1] = new float*[d_model];
-
-            for (j = 0; j < d_ffn; j++){
-                m_ffnWeights[i][0][j]= new float[d_model];
-                v_ffnWeights[i][0][j] = new float[d_model];
-                for (k = 0; k < d_model; k++){ 
-                    m_ffnWeights[i][0][j][k]= 0;
-                    v_ffnWeights[i][0][j][k] = 0;
-                }
-            }
-            
-            for (j = 0; j < d_model; j++){
-                m_ffnWeights[i][1][j]= new float[d_ffn];
-                v_ffnWeights[i][1][j] = new float[d_ffn];
-                for (k = 0; k < d_ffn; k++){ 
-                    m_ffnWeights[i][1][j][k]= 0;
-                    v_ffnWeights[i][1][j][k] = 0;
-                }
-            }
-
-            m_ffnBiases[i] = new float[d_ffn];
-            v_ffnBiases[i] = new float[d_ffn];
-            for (j = 0; j < d_ffn; j++){
-                m_ffnBiases[i][j] = 0;
-                v_ffnBiases[i][j] = 0;
-            }
+            MemoryUtils::allocateMatrixWithZeros(v_ffnWeights[i][0], d_ffn, d_model);
+            MemoryUtils::allocateMatrixWithZeros(v_ffnWeights[i][0], d_ffn, d_model);
+            MemoryUtils::allocateMatrixWithZeros(m_ffnWeights[i][1], d_model, d_ffn);
+            MemoryUtils::allocateMatrixWithZeros(v_ffnWeights[i][1], d_model, d_ffn);
         }
+        
+        float** m_ffnBiases;
+        float** v_ffnBiases;
+        MemoryUtils::allocateMatrixWithZeros(m_ffnBiases, layers, d_ffn);
+        MemoryUtils::allocateMatrixWithZeros(v_ffnBiases, layers, d_ffn);
+
 
         //Attention matricies
         float**** m_keyMatricies = new float***[layers];
@@ -421,61 +354,29 @@ void NoteTransformer::train(TrainingSettings settings){
             m_valueMatricies[i] = new float**[headsPerLayer];
             v_valueMatricies[i] = new float**[headsPerLayer];
             for (j = 0; j < headsPerLayer; j++){
-                m_keyMatricies[i][j] = new float*[d_model];
-                v_keyMatricies[i][j] = new float*[d_model];
-                m_quarryMatricies[i][j] = new float*[d_model];
-                v_quarryMatricies[i][j] = new float*[d_model];
-                m_valueMatricies[i][j] = new float*[d_model];
-                v_valueMatricies[i][j] = new float*[d_model];
-                for (k = 0; k < d_model; k++){
-                    m_keyMatricies[i][j][k] = new float[d_attention];
-                    v_keyMatricies[i][j][k] = new float[d_attention];
-                    m_quarryMatricies[i][j][k] = new float[d_attention];
-                    v_quarryMatricies[i][j][k] = new float[d_attention];
-                    m_valueMatricies[i][j][k] = new float[d_model];
-                    v_valueMatricies[i][j][k] = new float[d_model];
-                    for (l = 0; l < d_attention; l++){
-                        m_keyMatricies[i][j][k][l] = 0;
-                        v_keyMatricies[i][j][k][l] = 0;
-                        m_quarryMatricies[i][j][k][l] = 0;
-                        v_quarryMatricies[i][j][k][l] = 0;
-                    }
-                    for (l = 0; l < d_model; l++){
-                        m_valueMatricies[i][j][k][l] = 0;
-                        v_valueMatricies[i][j][k][l] = 0;
-                    }
-                }
+                MemoryUtils::allocateMatrixWithZeros(m_keyMatricies[i][j], d_model, d_attention);
+                MemoryUtils::allocateMatrixWithZeros(v_keyMatricies[i][j], d_model, d_attention);
+                MemoryUtils::allocateMatrixWithZeros(m_quarryMatricies[i][j], d_model, d_attention);
+                MemoryUtils::allocateMatrixWithZeros(v_quarryMatricies[i][j], d_model, d_attention);
+                MemoryUtils::allocateMatrixWithZeros(m_valueMatricies[i][j], d_model, d_model);
+                MemoryUtils::allocateMatrixWithZeros(v_valueMatricies[i][j], d_model, d_model);
             }
         }
         //Layer normalization
-        float** m_betas = new float*[layers];
-        float** v_betas = new float*[layers];
-        float** m_gamas = new float*[layers];
-        float** v_gamas = new float*[layers];
-        for (int i = 0; i < layers; i++){
-            m_betas[i] = new float[d_model];
-            v_betas[i] = new float[d_model];
-            m_gamas[i] = new float[d_model];
-            v_gamas[i] = new float[d_model];
-            for (int j = 0; j < d_model; j++){
-                m_betas[i][j] = 0;
-                v_betas[i][j] = 0;
-                m_gamas[i][j] = 0;
-                v_gamas[i][j] = 0;
-            }
-        }
+        float** m_betas;
+        float** v_betas;
+        float** m_gamas;
+        float** v_gamas;
+        MemoryUtils::allocateMatrixWithZeros(m_betas, layers, d_model);
+        MemoryUtils::allocateMatrixWithZeros(v_betas, layers, d_model);
+        MemoryUtils::allocateMatrixWithZeros(m_gamas, layers, d_model);
+        MemoryUtils::allocateMatrixWithZeros(v_gamas, layers, d_model);
 
         //Unebedding
-        float** m_unembeddingMatrix = new float*[d_model];
-        float** v_unembeddingMatrix = new float*[d_model];
-        for (i = 0; i < d_model; i++){
-            m_unembeddingMatrix[i] = new float[outputMatrixColumns];
-            v_unembeddingMatrix[i] = new float[outputMatrixColumns];
-            for (j = 0; j < outputMatrixColumns; j++){
-                m_unembeddingMatrix[i][j] = 0;
-                v_unembeddingMatrix[i][j] = 0;
-            }
-        }
+        float** m_unembeddingMatrix;
+        float** v_unembeddingMatrix;
+        MemoryUtils::allocateMatrixWithZeros(m_unembeddingMatrix, d_model, outputMatrixColumns);
+        MemoryUtils::allocateMatrixWithZeros(v_unembeddingMatrix, d_model, outputMatrixColumns);
 
 #pragma endregion
 
