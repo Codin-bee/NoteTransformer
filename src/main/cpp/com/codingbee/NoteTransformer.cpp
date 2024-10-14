@@ -306,10 +306,6 @@ void NoteTransformer::train(TrainingSettings settings){
         //Connecting layer
         float*** m_connectingLayerWeights= new float**[2];
         float*** v_connectingLayerWeights = new float**[2];
-        m_connectingLayerWeights[0];
-        v_connectingLayerWeights[0];
-        m_connectingLayerWeights[1];
-        v_connectingLayerWeights[1];
         MemoryUtils::allocateMatrixWithZeros(m_connectingLayerWeights[0], d_connectingLayer, d_embedding);
         MemoryUtils::allocateMatrixWithZeros(v_connectingLayerWeights[0], d_connectingLayer, d_embedding);
         MemoryUtils::allocateMatrixWithZeros(m_connectingLayerWeights[1], d_model, d_connectingLayer);

@@ -1,8 +1,10 @@
 #include "FileUtils.h"
 
 #include <string>
+#include <fstream>
 #include <dirent.h>
 #include "Exception.h"
+#include <iostream>
 
 using namespace std;
 
