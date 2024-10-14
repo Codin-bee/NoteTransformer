@@ -3,13 +3,7 @@
 
 #include <thread>
 #include <vector>
-#include <math.h>
 #include <string>
-#include <fstream>
-#include <iostream>
-#include <filesystem>
-#include <dirent.h>
-#include "MathUtils.h"
 #include "TrainingSettings.h"
 
 using namespace std;
