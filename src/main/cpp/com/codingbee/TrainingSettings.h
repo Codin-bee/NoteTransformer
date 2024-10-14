@@ -13,6 +13,7 @@ class TrainingSettings{
     float beta_2;
     float epsilon;
     string dataPath;
+    string savePath;
     int batchSize;
 
     public:
@@ -39,6 +40,9 @@ class TrainingSettings{
 
     int getBatchSize(){return batchSize;}
     void setBatchSize(int n);
+
+    string getSavePath(){return savePath;};
+    void setSavePath(string path);
 };
 
 #endif

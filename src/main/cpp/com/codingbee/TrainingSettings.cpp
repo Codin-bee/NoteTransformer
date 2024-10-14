@@ -44,3 +44,7 @@ void TrainingSettings::setBatchSize(int n){
     }
     batchSize = n;
 }
+
+void TrainingSettings::setSavePath(string path){
+    savePath = path;
+}
