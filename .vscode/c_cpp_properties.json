@@ -4,7 +4,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:\\Users\\theco\\mingw-w64-v11.0.0",
+                "C:/Users/theco/compiler/mingw-w64-v11.0.0",
                 "C:\\Users\\theco\\cpp\\MLProject\\src\\main\\cpp\\com\\codingbee\\NoteTransformer"
             ],
             "defines": [
