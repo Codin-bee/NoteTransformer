@@ -6,48 +6,33 @@
 using namespace std;
 
 int main(){
-    cout << "NOTE TRANSFORMER TRAINING" << "\n";
+    cout << "NOTE TRANSFORMER TRAINING" << "\n \n";
     cout << "Randomly initialize the transformer?" << "\n";
     system("pause");
     NoteTransformer transformer(128, 4, 2, 16, 16, 2, 2, 2, 64, 32, 64);
-    //transformer.randomInit();
-    //cout << "Done \n" << "Test saving and initialization from files? \n";
+    transformer.randomInit();
     try{
-    //transformer.save("C:/Users/theco/NoteTransformers/No1");
-    //transformer.~NoteTransformer();
+    transformer.save("C:/Users/theco/NoteTransformers/No1");
     transformer.init("C:/Users/theco/NoteTransformers/No1");
     cout << "The model has been initialized with " << transformer.getNumberOfParameters() << " parameters \n";
     cout << "Start the training? \n";
     system ("pause");
     TrainingSettings settings = TrainingSettings();
-    settings.setDataPath("C:\\Users\\theco\\NoteTransformers\\Datasets\\haydn1\\");
-    settings.setBatchSize(1);
+    settings.setDataPath("C:\\Users\\theco\\NoteTransformers\\Datasets\\haydn3\\");
+    settings.setBatchSize(3);
     settings.setEpochs(1);
     settings.setLearningRate(0.002);
     settings.setSoftmaxTemperature(1.1);
     settings.setBeta_1(0.9);
     settings.setBeta_2(0.98);
     settings.setEpsilon(0.00000001);
-
-    int** processedValues = FileUtils::readIntMatrixFromFile("C:\\Users\\theco\\NoteTransformers\\Datasets\\haydn1\\input0");
-    cout << "Loading fine \n";
-    float** result =  transformer.process(processedValues);
-    system("pause");
-    for (int i = 0; i < 128; i++){
-        for (int j = 0; j < 5; j++){
-            cerr << result[i][j] << " ";
-        }
-        cerr << "\n";
-    }
-    //transformer.train(settings);
+    cout << "Settings are fine \n";
+    transformer.train(settings);
 
     }catch (Exception e){
         cerr << e.getMessage();
-    }catch(const std::exception& e)
-    {
+    }catch(const std::exception& e){
         std::cerr << e.what() << '\n';
-    } catch (const std::system_error& e) {
-        cout << "Caught exception: " << e.what() << "\n";
     }
     
     cout << "Training process has been finished." << "\n";

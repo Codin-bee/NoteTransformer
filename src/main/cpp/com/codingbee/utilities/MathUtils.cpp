@@ -75,7 +75,6 @@ void MathUtils::applySoftmax(float*& vector, int vectorLength, int temperature){
             maxVal = vector[i];
         }
     }
-    cout << "Max value: " << maxVal << "\n";
 
     float sum = 0;
     for (int i = 0; i < vectorLength; i++) {
