@@ -29,8 +29,13 @@ NoteTransformer::NoteTransformer(int context, int layerCount, int headsInLayers,
         d_attention = d_model / headsPerLayer;
         attentionScalingFactor = 1 / sqrt(d_attention);
         softmaxTemperature = 1;
-        outputMatrixColumns = keyRange + velocityRange + 3;
+        outputMatrixColumns = keyRange + velocityRange + timingParams;
     }
+
+NoteTransformer::NoteTransformer(ntParams parameters){
+    NoteTransformer(parameters.context, parameters.layerCount, parameters.headsInLayers, parameters.keyDims, parameters.velocityDims,
+    parameters.prevDims, parameters.nextDims, parameters.absolutePosDims, parameters.connectDims, parameters.modelDims, parameters.ffnDims);
+}
 
 float** NoteTransformer::process(int** matrixToProcess) {
     std::vector<std::thread> threads;

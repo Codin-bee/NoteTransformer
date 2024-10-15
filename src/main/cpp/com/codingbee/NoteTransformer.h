@@ -7,7 +7,19 @@
 #include "TrainingSettings.h"
 
 using namespace std;
-
+struct ntParams{
+    int context;
+    int layerCount;
+    int headsInLayers;
+    int keyDims;
+    int velocityDims;
+    int prevDims;
+    int nextDims;
+    int absolutePosDims;
+    int connectDims;
+    int modelDims;
+    int ffnDims;
+    };
 class NoteTransformer{
 private:
     //Basic sizes
@@ -28,6 +40,8 @@ private:
     float* prevNoteAlphas;
     float* nextNoteAlphas;
     float* absolutePosAlphas;
+    //Number of tracked timing informations, determined by the model architecture, should never chnage
+    const int timingParams = 3;
 
     //Connecting layer
     float*** connectingLayerWeights;
@@ -72,6 +86,8 @@ public:
     /// @param ffnDims dimensions of the hidden layer in the feed forward networks
     NoteTransformer(int context, int layerCount, int headsInLayers, int keyDims, int velocityDims, int prevDims, 
     int nextDims, int absolutePosDims, int connectDims, int modelDims, int ffnDims);
+
+    NoteTransformer(ntParams parameters);
 
     void init(string dirPath);
 
@@ -145,5 +161,6 @@ public:
     /// @brief Sets the new temperature(T) used in the softmax function
     /// @param t the new temperature
     void setSoftmaxTemperature(float t);
+
 };
 #endif
