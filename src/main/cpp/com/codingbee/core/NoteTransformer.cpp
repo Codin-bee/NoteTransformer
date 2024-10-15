@@ -992,31 +992,6 @@ void NoteTransformer::init(string dirPath){
         unembeddingMatrix = FileUtils::readFloatMatrixFromFile(dirPath + "/unembedding");
     }
 
-int NoteTransformer::getNumberOfParameters(){
-    int params = 0;
-    //Embedding matricies
-    params += keyRange * d_keyEmbedding + velocityRange * d_velocityEmbedding;
-
-    //Embedding alphas
-    params += d_prevNoteEmbedding + d_nextNoteEmbedding + d_absolutePosition;
-
-    //Connecting
-    params += d_embedding * d_connectingLayer + d_connectingLayer * d_model + d_connectingLayer;
-
-    //FFN
-    params += layers * (d_model *d_ffn * 2 + d_ffn);
-
-    //Attention
-    params += layers * (2 * d_attention *d_model + d_model * d_model);
-
-    //Layer normalization
-    params += layers * d_model * 2;
-
-    //Unembedding
-    params += d_model * outputMatrixColumns;
-    return params;
-}
-
 NoteTransformer::~NoteTransformer() {
     //Embedding matricies
     MemoryUtils::deallocateMatrix(keyEmbeddingMatrix, keyRange);

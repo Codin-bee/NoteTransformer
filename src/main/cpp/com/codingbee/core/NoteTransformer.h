@@ -111,8 +111,6 @@ public:
     float** process(int** matrixToProcess);
 
     void train(TrainingSettings settings);
-
-    int getNumberOfParameters();
     
     void allocateModelMemory();
 
