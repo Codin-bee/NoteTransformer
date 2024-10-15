@@ -262,7 +262,7 @@ void NoteTransformer::allocateModelMemory(){
 
         //Layer normalization
         MemoryUtils::allocateMatrix(betas, layers, d_model);
-        MemoryUtils::allocateMatrix(gamas, layers, d_model);
+        MemoryUtils::allocateMatrix(gammas, layers, d_model);
 
         //Unembedding
         unembeddingMatrix = new float*[d_model];
@@ -741,7 +741,7 @@ void NoteTransformer::layerNormalizeVector(float*& vector, int layerNo){
     variance /= d_model;
 
     for (int i = 0; i < d_model; i++){
-        vector[i] = gamas[layerNo][i] * ((originalVector[i] - mean) / sqrt(variance + 0.00001)) + betas[layerNo][i];
+        vector[i] = gammas[layerNo][i] * ((originalVector[i] - mean) / sqrt(variance + 0.00001)) + betas[layerNo][i];
     }
 }
 
@@ -827,7 +827,7 @@ void NoteTransformer::save(string dirPath){
         }
         //Layer normalization
         FileUtils::saveMatrixToFiles(dirPath + "/betas", betas, layers, d_model);
-        FileUtils::saveMatrixToFiles(dirPath + "/gamas", gamas, layers, d_model);
+        FileUtils::saveMatrixToFiles(dirPath + "/gammas", gammas, layers, d_model);
         //Unembedding
         FileUtils::saveMatrixToFiles(dirPath + "/unembedding", unembeddingMatrix, d_model, outputMatrixColumns);
         }catch (Exception e){
@@ -941,7 +941,7 @@ void NoteTransformer::randomInit(){
         for (i = 0; i < layers; i++){
             for (j = 0; j < d_model; j++){
                 betas[i][j] = 0;
-                gamas[i][j] = 1;
+                gammas[i][j] = 1;
             }
         }
 
@@ -995,7 +995,7 @@ void NoteTransformer::init(string dirPath){
 
         //Layer normalization
         betas = FileUtils::readFloatMatrixFromFile(dirPath + "/betas");
-        gamas = FileUtils::readFloatMatrixFromFile(dirPath + "/gamas");
+        gammas = FileUtils::readFloatMatrixFromFile(dirPath + "/gammas");
 
         //Unembedding
         unembeddingMatrix = FileUtils::readFloatMatrixFromFile(dirPath + "/unembedding");
@@ -1034,7 +1034,7 @@ NoteTransformer::~NoteTransformer() {
 
     //Layer normalization
     MemoryUtils::deallocateMatrix(betas, layers);
-    MemoryUtils::deallocateMatrix(gamas, layers);
+    MemoryUtils::deallocateMatrix(gammas, layers);
 
     //Unembedding
     MemoryUtils::deallocateMatrix(unembeddingMatrix, outputMatrixColumns);

@@ -58,7 +58,7 @@ private:
 
     //Layer normalization
     float** betas;
-    float** gamas;
+    float** gammas;
 
     //Unembedding
     float** unembeddingMatrix;
