@@ -440,6 +440,7 @@ cout << "Embeddings \n";
                         v_hat = v_absolutePos[i] / (1 - pow(beta_2, time));
                         absolutePosAlphas[i] = absolutePosAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
+save(settings.getSavePath());
 cout << "Embeddings 2 \n";
                 //Connecting layer
                 for (i = 0; i < d_connectingLayer; i++){
@@ -470,6 +471,7 @@ cout << "Embeddings 2 \n";
                         v_hat = v_connectingLayerBiases[i] / (1 - pow(beta_2, time));
                         connectingLayerBiases[i] = connectingLayerBiases[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
+save(settings.getSavePath());
 cout << "Connectings \n";
                 //FFN weights and biases
                 for (i = 0; i < layers; i++){
@@ -503,6 +505,7 @@ cout << "Connectings \n";
                     }
                 }
 cout << "FFNs \n";
+save(settings.getSavePath());
                 //Attention matricies
                 for (i = 0; i < layers; i++){
                     for (j = 0; j < headsPerLayer; j++){
@@ -532,6 +535,7 @@ cout << "FFNs \n";
                         }
                     }
                 }
+save(settings.getSavePath());
 cout << "Attentionss \n";
                 //Unembedding
                 for (i = 0; i < keyRange + velocityRange + 3; i++){
@@ -545,6 +549,7 @@ cout << "Attentionss \n";
                     }
                 }
             }
+save(settings.getSavePath());
 cout << "Unembeddingss \n";
         }
         cout << "Training cost at the end of training: " << calculateAverageCost(settings.getDataPath(), 0, FileUtils::getNumberOfFilesInDir(settings.getDataPath())) << "\n";
@@ -596,7 +601,11 @@ cout << "Unembeddingss \n";
     MemoryUtils::deallocate4DTensor(v_valueMatricies, layers, headsPerLayer, d_model);
 
     //Layer normalization
-    /*SOON TM*/
+    MemoryUtils::deallocateMatrix(m_betas, layers);
+    MemoryUtils::deallocateMatrix(v_betas, layers);
+    MemoryUtils::deallocateMatrix(m_gamas, layers);
+    MemoryUtils::deallocateMatrix(v_gamas, layers);
+
     // Unembedding
     MemoryUtils::deallocateMatrix(m_unembeddingMatrix, d_model);
     MemoryUtils::deallocateMatrix(v_unembeddingMatrix, d_model);
