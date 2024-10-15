@@ -8,8 +8,6 @@
 
 using namespace std;
 
-vector<NoteTransformer> FileUtils::transformers;
-
 int FileUtils::getNumberOfFilesInDir(const string& directoryPath) {
     DIR *dp;
     int fileCount = 0;

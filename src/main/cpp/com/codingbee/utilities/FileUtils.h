@@ -56,8 +56,6 @@ class FileUtils{
         /// @param fileName The path to the file
         /// @return The vector containing values from the file
         static float* readFloatVectorFromFile(std::string fileName);
-    private:
-        static vector<NoteTransformer> transformers;
 };
 
 #endif
