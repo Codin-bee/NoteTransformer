@@ -27,3 +27,7 @@ int Calculator::numberOfParameters(ntParams transformerParameters){
     paramCount += transformerParameters.modelDims * 259;
     return paramCount;
 }
+
+double Calculator::trainingTime(ntParams parameters, int iterrations, int examples, double passTime){
+    return (double) iterrations * (double) Calculator::numberOfParameters(parameters) * (double) examples * 2 *passTime;
+}

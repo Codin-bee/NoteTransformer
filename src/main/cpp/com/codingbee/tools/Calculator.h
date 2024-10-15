@@ -4,5 +4,6 @@
 class Calculator{
 public:
     int numberOfParameters(ntParams parameters);
+    double trainingTime(ntParams parameters, int iterrations, int examples, double passTime);
 };
 #endif
