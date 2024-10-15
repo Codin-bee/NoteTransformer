@@ -543,21 +543,12 @@ cout << "Attentionss \n";
 cout << "Unembeddingss \n";
         }
         cout << "Training cost at the end of training: " << calculateAverageCost(settings.getDataPath(), 0, FileUtils::getNumberOfFilesInDir(settings.getDataPath())) << "\n";
-#pragma region Deallocation
+//Dealocation
     //Embedding matricies
-    for (i = 0; i < keyRange; i++) {
-        delete[] m_keyEmbedding[i];
-        delete[] v_keyEmbedding[i];
-    }
-    delete[] m_keyEmbedding;
-    delete[] v_keyEmbedding;
-
-    for (i = 0; i < velocityRange; i++) {
-        delete[] m_velocityEmbedding[i];
-        delete[] v_velocityEmbedding[i];
-    }
-    delete[] m_velocityEmbedding;
-    delete[] v_velocityEmbedding;
+    MemoryUtils::deallocateMatrix(m_keyEmbedding, keyRange);
+    MemoryUtils::deallocateMatrix(v_keyEmbedding, keyRange);
+    MemoryUtils::deallocateMatrix(m_velocityEmbedding, velocityRange);
+    MemoryUtils::deallocateMatrix(v_velocityEmbedding, velocityRange);
 
     //Embedding alphas
     delete[] m_prevNoteAlpha;
@@ -568,38 +559,21 @@ cout << "Unembeddingss \n";
     delete[] v_absolutePos;
 
     //Connecting layer
-    for (i = 0; i < d_connectingLayer; i++) {
-        delete[] m_connectingLayerWeights[0][i];
-        delete[] v_connectingLayerWeights[0][i];
-    }
-    for (i = 0; i < d_model; i++) {
-        delete[] m_connectingLayerWeights[1][i];
-        delete[] v_connectingLayerWeights[1][i];
-    }
-    delete[] m_connectingLayerWeights[0];
-    delete[] v_connectingLayerWeights[0];
-    delete[] m_connectingLayerWeights[1];
-    delete[] v_connectingLayerWeights[1];
+    MemoryUtils::deallocateMatrix(m_connectingLayerWeights[0], d_connectingLayer);
+    MemoryUtils::deallocateMatrix(v_connectingLayerWeights[0], d_connectingLayer);
+    MemoryUtils::deallocateMatrix(v_connectingLayerWeights[1], d_model);
+    MemoryUtils::deallocateMatrix(v_connectingLayerWeights[1], d_model);
     delete[] m_connectingLayerWeights;
     delete[] v_connectingLayerWeights;
-
     delete[] m_connectingLayerBiases;
     delete[] v_connectingLayerBiases;
 
     //FFN weights and biases
     for (i = 0; i < layers; i++) {
-        for (j = 0; j < d_ffn; j++) {
-            delete[] m_ffnWeights[i][0][j];
-            delete[] v_ffnWeights[i][0][j];
-        }
-        for (j = 0; j < d_model; j++) {
-            delete[] m_ffnWeights[i][1][j];
-            delete[] v_ffnWeights[i][1][j];
-        }
-        delete[] m_ffnWeights[i][0];
-        delete[] v_ffnWeights[i][0];
-        delete[] m_ffnWeights[i][1];
-        delete[] v_ffnWeights[i][1];
+    MemoryUtils::deallocateMatrix(m_ffnWeights[i][0], d_ffn);
+    MemoryUtils::deallocateMatrix(v_ffnWeights[i][0], d_ffn);
+    MemoryUtils::deallocateMatrix(v_ffnWeights[i][1], d_model);
+    MemoryUtils::deallocateMatrix(v_ffnWeights[i][1], d_model);
         delete[] m_ffnBiases[i];
         delete[] v_ffnBiases[i];
     }
@@ -609,53 +583,18 @@ cout << "Unembeddingss \n";
     delete[] v_ffnBiases;
 
     // Attention matricies
-    for (i = 0; i < layers; i++) {
-        for (j = 0; j < headsPerLayer; j++) {
-            for (k = 0; k < d_model; k++) {
-                delete[] m_keyMatricies[i][j][k];
-                delete[] v_keyMatricies[i][j][k];
-                delete[] m_quarryMatricies[i][j][k];
-                delete[] v_quarryMatricies[i][j][k];
-                delete[] m_valueMatricies[i][j][k];
-                delete[] v_valueMatricies[i][j][k];
-            }
-            delete[] m_keyMatricies[i][j];
-            delete[] v_keyMatricies[i][j];
-            delete[] m_quarryMatricies[i][j];
-            delete[] v_quarryMatricies[i][j];
-            delete[] m_valueMatricies[i][j];
-            delete[] v_valueMatricies[i][j];
-        }
-        delete[] m_keyMatricies[i];
-        delete[] v_keyMatricies[i];
-        delete[] m_quarryMatricies[i];
-        delete[] v_quarryMatricies[i];
-        delete[] m_valueMatricies[i];
-        delete[] v_valueMatricies[i];
-    }
-    delete[] m_keyMatricies;
-    delete[] v_keyMatricies;
-    delete[] m_quarryMatricies;
-    delete[] v_quarryMatricies;
-    delete[] m_valueMatricies;
-    delete[] v_valueMatricies;
+    MemoryUtils::deallocate4DTensor(m_keyMatricies, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(v_keyMatricies, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(m_quarryMatricies, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(v_quarryMatricies, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(v_valueMatricies, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(v_valueMatricies, layers, headsPerLayer, d_model);
 
     //Layer normalization
-    for (int i = 0; i < layers; i++){
-        delete[] betas[i];
-        delete[] gamas[i];
-    }
-    delete[] betas;
-    delete[] gamas;
-
+    /*SOON TM*/
     // Unembedding
-    for (i = 0; i < d_model; i++) {
-        delete[] m_unembeddingMatrix[i];
-        delete[] v_unembeddingMatrix[i];
-    }
-    delete[] m_unembeddingMatrix;
-    delete[] v_unembeddingMatrix;
-#pragma endregion
+    MemoryUtils::deallocateMatrix(m_unembeddingMatrix, d_model);
+    MemoryUtils::deallocateMatrix(v_unembeddingMatrix, d_model);
     }
 
 float** NoteTransformer::embeddMatrix(int** matrix){
@@ -1140,7 +1079,14 @@ NoteTransformer::~NoteTransformer() {
     delete[] quarryMatricies;
     delete[] keyMatricies;
     delete[] valueMatricies;
-
+    
+    //Layer normalization
+    for (int i = 0; i < layers; i++){
+        delete[] betas[i];
+        delete[] gamas[i];
+    }
+    delete[] betas;
+    delete[] gamas;
     //Unembedding
     for (i = 0; i < keyRange + velocityRange + 3; i++) {
         delete[] unembeddingMatrix[i];
