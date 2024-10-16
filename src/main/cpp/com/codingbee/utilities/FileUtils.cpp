@@ -8,7 +8,7 @@
 
 using namespace std;
 
-int FileUtils::getNumberOfFilesInDir(const string& directoryPath) {
+int FileUtils::getNumberOfFilesInDir(const string& directoryPath){
     DIR *dp;
     int fileCount = 0;
     struct dirent *ep;     
@@ -22,7 +22,7 @@ int FileUtils::getNumberOfFilesInDir(const string& directoryPath) {
         }
         closedir(dp);
     } else {
-        std::cerr << "Exception: the directory " << directoryPath << " could not be opened.\n";
+        throw Exception("Exception: the directory " + directoryPath + " could not be opened", ExceptionType::FILE_HANDLEING);
     }
     return fileCount;
 }
