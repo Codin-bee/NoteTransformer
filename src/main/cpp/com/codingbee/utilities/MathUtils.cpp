@@ -98,6 +98,12 @@ float MathUtils::sigmoid(float n){
 }
 
 float MathUtils::addVectorElements(float* vector, int vectorLength){
+    if(vector == nullptr){
+        throw Exception("The vector can not be a null pointer", ExceptionType::INVALID_ARGUMENT);
+    }
+    if(vectorLength <= 0){
+        throw Exception("The vector lenght can not be a zero or lower", ExceptionType::INVALID_ARGUMENT);
+    }
     float sum = 0;
     for (int i = 0; i < vectorLength; i++){
         sum += vector[i];
@@ -106,6 +112,12 @@ float MathUtils::addVectorElements(float* vector, int vectorLength){
 }
 
 float* MathUtils::addVectors(float* vectorA, float* vectorB, int vectorLength){
+    if (vectorA == nullptr || vectorB == nullptr){
+        throw Exception("The vectors can not be null pointers", ExceptionType::INVALID_ARGUMENT);
+    }
+    if (vectorLength <= 0){
+        throw Exception("The vector length can not be zero or lower", ExceptionType::INVALID_ARGUMENT);
+    }
     float* vectorC = new float[vectorLength];
     for (int i = 0; i < vectorLength; i++){
         vectorC[i] = vectorA[i] + vectorB[i];
@@ -114,6 +126,12 @@ float* MathUtils::addVectors(float* vectorA, float* vectorB, int vectorLength){
 }
 
 float* MathUtils::multiplyVectors(float* vectorA, float* vectorB, int vectorLength){
+    if (vectorA == nullptr || vectorB == nullptr){
+        throw Exception("The vectors can not be null pointers", ExceptionType::INVALID_ARGUMENT);
+    }
+    if (vectorLength <= 0){
+        throw Exception("The vector length can not be zero or lower", ExceptionType::INVALID_ARGUMENT);
+    }
     float* vectorC = new float[vectorLength];
     for (int i = 0; i < vectorLength; i++){
         vectorC[i] = vectorA[i] * vectorB[i];
