@@ -17,7 +17,7 @@ void MemoryUtils::deallocateMatrix(float**& matrix, int rows){
 void MemoryUtils::deallocate4DTensor(float****& tensor, int d1, int d2, int d3){
     for (int i = 0; i < d1; i++){
         for (int j = 0; j < d2; j++){
-            for (int k = 0; k < d2; k++){
+            for (int k = 0; k < d3; k++){
                 delete[] tensor[i][j][k];
             }
             delete[] tensor[i][j];
