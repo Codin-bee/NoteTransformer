@@ -32,10 +32,13 @@ NoteTransformer::NoteTransformer(int context, int layerCount, int headsInLayers,
         outputMatrixColumns = keyRange + velocityRange + timingParams;
     }
 
-NoteTransformer::NoteTransformer(ntParams parameters){
-    NoteTransformer(parameters.context, parameters.layerCount, parameters.headsInLayers, parameters.keyDims, parameters.velocityDims,
-    parameters.prevDims, parameters.nextDims, parameters.absolutePosDims, parameters.connectDims, parameters.modelDims, parameters.ffnDims);
+NoteTransformer::NoteTransformer(ntParams parameters)
+    : NoteTransformer(parameters.context, parameters.layerCount, parameters.headsInLayers, 
+                      parameters.keyDims, parameters.velocityDims, parameters.prevDims, 
+                      parameters.nextDims, parameters.absolutePosDims, parameters.connectDims, 
+                      parameters.modelDims, parameters.ffnDims) {
 }
+
 
 float** NoteTransformer::process(int** matrixToProcess) {
     std::vector<std::thread> threads;
