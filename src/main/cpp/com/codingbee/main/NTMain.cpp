@@ -2,24 +2,44 @@
 #include "NoteTransformer.h"
 #include "FileUtils.h"
 #include "Exception.h"
+#include "Calculator.h"
 
 using namespace std;
 
 int main(){
+    string modelPath = "THE MODEL FOLDER";
+    string dataPath = "THE DATA FOLDER";
     cout << "NOTE TRANSFORMER TRAINING" << "\n \n";
-    cout << "Randomly initialize the transformer?" << "\n";
     system("pause");
-    NoteTransformer transformer(128, 4, 2, 16, 16, 2, 2, 2, 64, 32, 64);
-    transformer.randomInit();
+    ntParams parameters;
+    parameters.context = 128;
+    parameters.layerCount = 4;
+    parameters.headsInLayers = 2;
+    parameters.keyDims = 8;
+    parameters.velocityDims = 8;
+    parameters.prevDims = 2;
+    parameters.nextDims = 2;
+    parameters.absolutePosDims = 2;
+    parameters.connectDims = 64;
+    parameters.modelDims = 32;
+    parameters.ffnDims = 64;
+    NoteTransformer transformer(parameters);
+    cout << "Transformer object created \n";
+    string answer;
+    cout << "Press enter to start training or enter special command \n";
+    cin >> answer;
+    if (answer.compare("{}!psodkladu_THIS_IS_CODE_FOR_RANDOM_INITIALIZATION_hfv{][bebe")){
+        transformer.randomInit();
+        transformer.save(modelPath);
+    }
     try{
-    transformer.save("C:/Users/theco/NoteTransformers/No1");
-    transformer.init("C:/Users/theco/NoteTransformers/No1");
-    cout << "The model has been initialized with " << transformer.getNumberOfParameters() << " parameters \n";
+    transformer.init(modelPath);
+    cout << "\nThe model has been initialized successfuly with " << Calculator::numberOfParameters(parameters) << " parameters \n";
     cout << "Start the training? \n";
     system ("pause");
     TrainingSettings settings = TrainingSettings();
-    settings.setDataPath("C:\\Users\\theco\\NoteTransformers\\Datasets\\haydn3\\");
-    settings.setBatchSize(3);
+    settings.setDataPath(dataPath);
+    settings.setBatchSize(1);
     settings.setEpochs(1);
     settings.setLearningRate(0.002);
     settings.setSoftmaxTemperature(1.1);
