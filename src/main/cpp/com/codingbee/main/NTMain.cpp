@@ -7,8 +7,8 @@
 using namespace std;
 
 int main(){
-    string modelPath = "THE MODEL FOLDER";
-    string dataPath = "THE DATA FOLDER";
+    string modelPath = "/home/kacper/4bee/pianobot";
+    string dataPath = "/home/kacper/4bee/pianobot/data";
     cout << "NOTE TRANSFORMER TRAINING" << "\n \n";
     system("pause");
     ntParams parameters;
@@ -25,6 +25,7 @@ int main(){
     parameters.ffnDims = 64;
     NoteTransformer transformer(parameters);
     cout << "Transformer object created \n";
+    system("pause");
     string answer;
     cout << "Press enter to start training or enter special command \n";
     cin >> answer;
@@ -55,7 +56,7 @@ int main(){
         std::cerr << e.what() << '\n';
     }
     
-    cout << "Training process has been finished." << "\n";
+    cout << "\nTraining process has been finished." << "\n";
     cout << "Want to close this dialog and dealocate memory?" << "\n";
     system("pause");
     transformer.~NoteTransformer();
