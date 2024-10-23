@@ -280,7 +280,7 @@ void NoteTransformer::train(TrainingSettings settings){
         float g, m_hat, v_hat, time;
         float beta_1 = settings.getBeta_1(), beta_2 =  settings.getBeta_2(), beta_3 = 1 - beta_1, beta_4 = 1 - beta_2, alpha = settings.getLearningRate(), epsilon = settings.getEpsilon();
 
-#pragma region  Allocation
+//Allocation
         //Embedding matricies
         float** m_keyEmbedding;
         float** v_keyEmbedding;
@@ -382,21 +382,21 @@ void NoteTransformer::train(TrainingSettings settings){
         MemoryUtils::allocateMatrixWithZeros(m_unembeddingMatrix, d_model, outputMatrixColumns);
         MemoryUtils::allocateMatrixWithZeros(v_unembeddingMatrix, d_model, outputMatrixColumns);
 
-#pragma endregion
-
-cout << "Memory allocated \n";
         for (int epoch = 0; epoch < settings.getEpochs(); epoch++){
             cout << "Training cost at the start of epoch " + to_string(epoch) + " : " << calculateAverageCost(settings.getDataPath(), 0, FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / 2) << "\n";
             time = epoch + 1;
             for(int batchNo = 0; batchNo < FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / settings.getBatchSize(); batchNo++){
-                int startIndex = batchNo * settings.getBatchSize();
-                int endIndex = startIndex + settings.getBatchSize();
-cout << "Params passed \n";
+                int*** inputs = new int**[settings.getBatchSize()];
+                float*** outputs = new float**[settings.getBatchSize()];
+                for (int i = 0; i < settings.getBatchSize(); i++){
+                    inputs[i] = FileUtils::readIntMatrixFromFile(settings.getDataPath() + "input" + to_string(batchNo * settings.getBatchSize() + i));
+                    outputs[i] = FileUtils::readFloatMatrixFromFile(settings.getDataPath() + "output" + to_string(batchNo * settings.getBatchSize() + i));
+                }
                 //Embedding matricies
                 for (i = 0; i < keyRange; i++){
                     cout << i << " ";
                     for (j = 0; j < d_keyEmbedding; j++){
-                        g = calculateGradientWithRespectTo(keyEmbeddingMatrix[i], j, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(keyEmbeddingMatrix[i], j, settings, inputs, outputs);
                         m_keyEmbedding[i][j] = beta_1 * m_keyEmbedding[i][j] + beta_3 * g;
                         v_keyEmbedding[i][j] = beta_2 * v_keyEmbedding[i][j] + beta_4 * pow(g, 2);
                         m_hat = m_keyEmbedding[i][j] / (1 - pow(beta_1, time));
@@ -408,7 +408,7 @@ cout << "Params passed \n";
                 for (i = 0; i < velocityRange; i++){
                     cout << i << " ";
                     for (j = 0; j < d_velocityEmbedding; j++){
-                        g = calculateGradientWithRespectTo(velocityEmbeddingMatrix[i], j, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(velocityEmbeddingMatrix[i], j, settings, inputs, outputs);
                         m_velocityEmbedding[i][j] = beta_1 * m_velocityEmbedding[i][j] + beta_3 * g;
                         v_velocityEmbedding[i][j] = beta_2 * v_velocityEmbedding[i][j] + beta_4 * pow(g, 2);
                         m_hat = m_velocityEmbedding[i][j] / (1 - pow(beta_1, time));
@@ -420,7 +420,7 @@ save(settings.getSavePath());
 cout << "Embeddings \n";
                 //Embedding aplhas
                 for (i = 0; i < d_prevNoteEmbedding; i++){
-                        g = calculateGradientWithRespectTo(prevNoteAlphas, i, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(prevNoteAlphas, i, settings, inputs, outputs);
                         m_prevNoteAlpha[i] = beta_1 * m_prevNoteAlpha[i] + beta_3 * g;
                         v_prevNoteAlpha[i] = beta_2 * v_prevNoteAlpha[i] + beta_4 * pow(g, 2);
                         m_hat = m_prevNoteAlpha[i] / (1 - pow(beta_1, time));
@@ -428,7 +428,7 @@ cout << "Embeddings \n";
                         prevNoteAlphas[i] = prevNoteAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
                 for (i = 0; i < d_nextNoteEmbedding; i++){
-                        g = calculateGradientWithRespectTo(nextNoteAlphas, i, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(nextNoteAlphas, i, settings, inputs, outputs);
                         m_nextNoteAlpha[i] = beta_1 * m_nextNoteAlpha[i] + beta_3 * g;
                         v_nextNoteAlpha[i] = beta_2 * v_nextNoteAlpha[i] + beta_4 * pow(g, 2);
                         m_hat = m_nextNoteAlpha[i] / (1 - pow(beta_1, time));
@@ -436,7 +436,7 @@ cout << "Embeddings \n";
                         nextNoteAlphas[i] = nextNoteAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
                 for (i = 0; i < d_absolutePosition; i++){
-                        g = calculateGradientWithRespectTo(absolutePosAlphas, i, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(absolutePosAlphas, i, settings, inputs, outputs);
                         m_absolutePos[i] = beta_1 * m_absolutePos[i] + beta_3 * g;
                         v_absolutePos[i] = beta_2 * v_absolutePos[i] + beta_4 * pow(g, 2);
                         m_hat = m_absolutePos[i] / (1 - pow(beta_1, time));
@@ -448,7 +448,7 @@ cout << "Embeddings 2 \n";
                 //Connecting layer
                 for (i = 0; i < d_connectingLayer; i++){
                     for (j = 0; j < d_embedding; j++){
-                        g = calculateGradientWithRespectTo(connectingLayerWeights[0][i], j, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(connectingLayerWeights[0][i], j, settings, inputs, outputs);
                         m_connectingLayerWeights[0][i][j] = beta_1 * m_velocityEmbedding[i][j] + beta_3 * g;
                         v_connectingLayerWeights[0][i][j] = beta_2 * v_velocityEmbedding[i][j] + beta_4 * pow(g, 2);
                         m_hat = m_connectingLayerWeights[0][i][j] / (1 - pow(beta_1, time));
@@ -458,7 +458,7 @@ cout << "Embeddings 2 \n";
                 }
                 for (i = 0; i < d_model; i++){
                     for (j = 0; j < d_connectingLayer; j++){
-                        g = calculateGradientWithRespectTo(connectingLayerWeights[1][i], j, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(connectingLayerWeights[1][i], j, settings, inputs, outputs);
                         m_connectingLayerWeights[1][i][j] = beta_1 * m_velocityEmbedding[i][j] + beta_3 * g;
                         v_connectingLayerWeights[1][i][j] = beta_2 * v_velocityEmbedding[i][j] + beta_4 * pow(g, 2);
                         m_hat = m_connectingLayerWeights[1][i][j] / (1 - pow(beta_1, time));
@@ -467,7 +467,7 @@ cout << "Embeddings 2 \n";
                     }
                 }
                 for (i = 0; i < d_connectingLayer; i++){
-                        g = calculateGradientWithRespectTo(connectingLayerBiases, i, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(connectingLayerBiases, i, settings, inputs, outputs);
                         m_connectingLayerBiases[i] = beta_1 * m_connectingLayerBiases[i] + beta_3 * g;
                         v_connectingLayerBiases[i] = beta_2 * v_connectingLayerBiases[i] + beta_4 * pow(g, 2);
                         m_hat = m_connectingLayerBiases[i] / (1 - pow(beta_1, time));
@@ -480,7 +480,7 @@ cout << "Connectings \n";
                 for (i = 0; i < layers; i++){
                     for (j = 0; j < d_ffn; j++){
                         for (k = 0; k < d_model; k++){
-                            g = calculateGradientWithRespectTo(ffnWeights[i][0][j], k, settings, startIndex, endIndex);
+                            g = calculateGradientWithRespectTo(ffnWeights[i][0][j], k, settings, inputs, outputs);
                             m_ffnWeights[i][0][j][k] = beta_1 * m_ffnWeights[i][0][j][k] + beta_3 * g;
                             v_ffnWeights[i][0][j][k] = beta_2 * v_ffnWeights[i][0][j][k] + beta_4 * pow(g, 2);
                             m_hat = m_ffnWeights[i][0][j][k] / (1 - pow(beta_1, time));
@@ -490,7 +490,7 @@ cout << "Connectings \n";
                     }
                     for (j = 0; j < d_model; j++){
                         for (k = 0; k < d_ffn; k++){
-                            g = calculateGradientWithRespectTo(ffnWeights[i][1][j], k, settings, startIndex, endIndex);
+                            g = calculateGradientWithRespectTo(ffnWeights[i][1][j], k, settings, inputs, outputs);
                             m_ffnWeights[i][1][j][k] = beta_1 * m_ffnWeights[i][0][j][k] + beta_3 * g;
                             v_ffnWeights[i][1][j][k] = beta_2 * v_ffnWeights[i][0][j][k] + beta_4 * pow(g, 2);
                             m_hat = m_ffnWeights[i][1][j][k] / (1 - pow(beta_1, time));
@@ -499,7 +499,7 @@ cout << "Connectings \n";
                         }
                     }
                     for (j = 0; j < d_ffn; j++){
-                        g = calculateGradientWithRespectTo(ffnBiases[i], j, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(ffnBiases[i], j, settings, inputs, outputs);
                         m_ffnBiases[i][j] = beta_1 * m_ffnBiases[i][j] + beta_3 * g;
                         v_ffnBiases[i][j] = beta_2 * v_ffnBiases[i][j] + beta_4 * pow(g, 2);
                         m_hat = m_ffnBiases[i][j] / (1 - pow(beta_1, time));
@@ -514,21 +514,21 @@ save(settings.getSavePath());
                     for (j = 0; j < headsPerLayer; j++){
                         for (k = 0; k < d_attention; k++){
                             for (l = 0; l < d_model; l++){
-                                g = calculateGradientWithRespectTo(keyMatricies[i][j][k], l, settings, startIndex, endIndex);
+                                g = calculateGradientWithRespectTo(keyMatricies[i][j][k], l, settings, inputs, outputs);
                                 m_keyMatricies[i][j][k][l] = beta_1 * m_keyMatricies[i][j][k][l] + beta_3 * g;
                                 v_keyMatricies[i][j][k][l] = beta_2 * v_keyMatricies[i][j][k][l] + beta_4 * pow(g, 2);
                                 m_hat = 0 / (1 - pow(beta_1, time));
                                 v_hat = 0 / (1 - pow(beta_2, time));
                                 keyMatricies[i][j][k][l] = keyMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
 
-                                g = calculateGradientWithRespectTo(quarryMatricies[i][j][k], l, settings, startIndex, endIndex);
+                                g = calculateGradientWithRespectTo(quarryMatricies[i][j][k], l, settings, inputs, outputs);
                                 m_quarryMatricies[i][j][k][l] = beta_1 * m_quarryMatricies[i][j][k][l] + beta_3 * g;
                                 v_quarryMatricies[i][j][k][l] = beta_2 * v_quarryMatricies[i][j][k][l] + beta_4 * pow(g, 2);
                                 m_hat = 0 / (1 - pow(beta_1, time));
                                 v_hat = 0 / (1 - pow(beta_2, time));
                                 quarryMatricies[i][j][k][l] = quarryMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                                 
-                                g = calculateGradientWithRespectTo(valueMatricies[i][j][k], l, settings, startIndex, endIndex);
+                                g = calculateGradientWithRespectTo(valueMatricies[i][j][k], l, settings, inputs, outputs);
                                 m_valueMatricies[i][j][k][l] = beta_1 * m_valueMatricies[i][j][k][l] + beta_3 * g;
                                 v_valueMatricies[i][j][k][l] = beta_2 * v_valueMatricies[i][j][k][l] + beta_4 * pow(g, 2);
                                 m_hat = 0 / (1 - pow(beta_1, time));
@@ -543,7 +543,7 @@ cout << "Attentionss \n";
                 //Unembedding
                 for (i = 0; i < keyRange + velocityRange + 3; i++){
                     for (j = 0; j < d_model; j++){
-                        g = calculateGradientWithRespectTo(unembeddingMatrix[i], j, settings, startIndex, endIndex);
+                        g = calculateGradientWithRespectTo(unembeddingMatrix[i], j, settings, inputs, outputs);
                         m_unembeddingMatrix[i][j] = beta_1 * m_unembeddingMatrix[i][j] + beta_3 * g;
                         v_unembeddingMatrix[i][j] = beta_2 * v_unembeddingMatrix[i][j] + beta_4 * pow(g, 2);
                         m_hat = 0 / (1 - pow(beta_1, time));
@@ -760,7 +760,7 @@ float NoteTransformer::calculateCost(int** input, float** expectedOutput){
             cost += pow((recieved[i][j] - expectedOutput[i][j]), 2);
         }
         for (j = keyRange + velocityRange; j < keyRange + velocityRange + 3; j++){
-            cost += abs((recieved[i][j] - expectedOutput[i][j]));
+            cost += abs((recieved[i][j] - expectedOutput[i][j])) * 0.001;
         }
     }
     for (j = 0; j < contextSize; j++){
@@ -781,12 +781,33 @@ float NoteTransformer::calculateGradientWithRespectTo(float*& array, int index, 
     return (float) (costHigher - costLower) / (float) (2.0f * nudge);
 }
 
+float NoteTransformer::calculateGradientWithRespectTo(float*& array, int index, TrainingSettings settings, int*** inputs, float*** outputs){
+    float nudge = 0.000001;
+    float originalWeight = array[index];
+    array[index] = originalWeight + nudge;
+    float costHigher = calculateAverageCost(inputs, outputs, settings.getBatchSize());
+    array[index] = originalWeight + nudge;
+    float costLower = calculateAverageCost(inputs, outputs, settings.getBatchSize());
+    array[index] = originalWeight;
+    return (float) (costHigher - costLower) / (float) (2.0f * nudge);
+}
+
 float NoteTransformer::calculateAverageCost(string dirPath, int startIndex, int endIndex){
     float sum = 0;
     int n = 0;
     for (int i = startIndex; i < endIndex; i++){
         sum += calculateCost(FileUtils::readIntMatrixFromFile(dirPath + "input" + to_string(i)), 
                 FileUtils::readFloatMatrixFromFile(dirPath + "output" + to_string(i)));
+        n++;
+    }
+    return (float) sum / (float) n;
+}
+
+float NoteTransformer::calculateAverageCost(int*** inputs, float*** outputs, int batchSize){
+    float sum = 0;
+    int n = 0;
+    for (int i = 0; i < batchSize; i++){
+        sum += calculateCost(inputs[i], outputs[i]);
         n++;
     }
     return (float) sum / (float) n;

@@ -140,6 +140,10 @@ public:
 
     float calculateGradientWithRespectTo(float*& array, int index, TrainingSettings settings, int startIndex, int endIndex);
 
+    float calculateGradientWithRespectTo(float*& array, int index, TrainingSettings settings, int*** inputs, float*** outputs);
+
+    float calculateAverageCost(int*** inputs, float*** outputs, int batchSize);
+
     float** embeddMatrix(int** matrix);
 
     float** unembeddMatrixAndDeleteOriginal(float**& matrix);
