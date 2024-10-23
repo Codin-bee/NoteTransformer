@@ -382,12 +382,15 @@ void NoteTransformer::train(TrainingSettings settings){
         MemoryUtils::allocateMatrixWithZeros(m_unembeddingMatrix, d_model, outputMatrixColumns);
         MemoryUtils::allocateMatrixWithZeros(v_unembeddingMatrix, d_model, outputMatrixColumns);
 
+        //Inputs and outputs
+        int*** inputs = new int**[settings.getBatchSize()];
+        float*** outputs = new float**[settings.getBatchSize()];
+
+
         for (int epoch = 0; epoch < settings.getEpochs(); epoch++){
             cout << "Training cost at the start of epoch " + to_string(epoch) + " : " << calculateAverageCost(settings.getDataPath(), 0, FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / 2) << "\n";
             time = epoch + 1;
             for(int batchNo = 0; batchNo < FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / settings.getBatchSize(); batchNo++){
-                int*** inputs = new int**[settings.getBatchSize()];
-                float*** outputs = new float**[settings.getBatchSize()];
                 for (int i = 0; i < settings.getBatchSize(); i++){
                     inputs[i] = FileUtils::readIntMatrixFromFile(settings.getDataPath() + "input" + to_string(batchNo * settings.getBatchSize() + i));
                     outputs[i] = FileUtils::readFloatMatrixFromFile(settings.getDataPath() + "output" + to_string(batchNo * settings.getBatchSize() + i));
@@ -475,7 +478,6 @@ cout << "Embeddings 2 \n";
                         connectingLayerBiases[i] = connectingLayerBiases[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
 save(settings.getSavePath());
-cout << "Connectings \n";
                 //FFN weights and biases
                 for (i = 0; i < layers; i++){
                     for (j = 0; j < d_ffn; j++){
@@ -507,7 +509,6 @@ cout << "Connectings \n";
                         ffnBiases[i][j] = ffnBiases[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
-cout << "FFNs \n";
 save(settings.getSavePath());
                 //Attention matricies
                 for (i = 0; i < layers; i++){
@@ -539,7 +540,6 @@ save(settings.getSavePath());
                     }
                 }
 save(settings.getSavePath());
-cout << "Attentionss \n";
                 //Unembedding
                 for (i = 0; i < keyRange + velocityRange + 3; i++){
                     for (j = 0; j < d_model; j++){
@@ -553,7 +553,6 @@ cout << "Attentionss \n";
                 }
             }
 save(settings.getSavePath());
-cout << "Unembeddingss \n";
         }
         cout << "Training cost at the end of training: " << calculateAverageCost(settings.getDataPath(), 0, FileUtils::getNumberOfFilesInDir(settings.getDataPath())) << "\n";
 //Dealocation
@@ -612,7 +611,19 @@ cout << "Unembeddingss \n";
     // Unembedding
     MemoryUtils::deallocateMatrix(m_unembeddingMatrix, d_model);
     MemoryUtils::deallocateMatrix(v_unembeddingMatrix, d_model);
+
+    //Training data
+    for (int i = 0; i < settings.getBatchSize(); i++){
+        for (int j = 0; j < contextSize; j++){
+            delete[] inputs[i][j];
+            delete[] outputs[i][j];
+        }
+        delete[] inputs[i];
+        delete[] outputs[i];
     }
+    delete[] inputs;
+    delete[] outputs;
+}
 
 float** NoteTransformer::embeddMatrix(int** matrix){
     float** embeddedMatrix = new float*[contextSize];
