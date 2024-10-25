@@ -48,3 +48,7 @@ void TrainingSettings::setBatchSize(int n){
 void TrainingSettings::setSavePath(string path){
     savePath = path;
 }
+
+void TrainingSettings::setAdamParamsSavePath(string path){
+    adamParamsSavePath = path;
+}

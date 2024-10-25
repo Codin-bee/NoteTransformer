@@ -14,6 +14,7 @@ class TrainingSettings{
     float epsilon;
     string dataPath;
     string savePath;
+    string adamParamsSavePath;
     int batchSize;
 
     public:
@@ -41,8 +42,11 @@ class TrainingSettings{
     int getBatchSize(){return batchSize;}
     void setBatchSize(int n);
 
-    string getSavePath(){return savePath;};
+    string getSavePath(){return savePath;}
     void setSavePath(string path);
+
+    string getAdamParamasSavePath(){return adamParamsSavePath;}
+    void setAdamParamsSavePath(string path);
 };
 
 #endif
