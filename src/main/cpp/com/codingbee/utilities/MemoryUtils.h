@@ -21,6 +21,11 @@ class MemoryUtils{
      /// @param rows Number of rows in the matrix
      static void deallocateMatrix(float**& matrix, int rows);
 
+     /// @brief Deallocates matrix at given adress with given size
+     /// @param matrix The pointer to the matrix adress
+     /// @param rows Number of rows in the matrix
+     static void deallocateMatrix(int**& matrix, int rows);
+
      /// @brief Deallocates 4D tensor at given adress with given size
      /// @param tensor The pointer to the tensor adress
      /// @param d1 First dimension of the tensor
