@@ -1,4 +1,4 @@
-#include "TypeUtils.h"
+#include "VarUtils.h"
 #include <math.h>
 
 int **TypeUtils::floorAndCastToInt(float **matrix, int rows, int columns){
@@ -10,4 +10,12 @@ int **TypeUtils::floorAndCastToInt(float **matrix, int rows, int columns){
         }
     }
     return outputMatrix;
+}
+
+void TypeUtils::copyMatrix(int **matrix1, int **&matrix2, int rows, int columns){
+    for (int i = 0; i < rows; i++){
+        for (int j = 0; j < columns; j++){
+            matrix2[i][j] = matrix1[i][j];
+        }
+    }
 }
