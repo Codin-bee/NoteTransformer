@@ -5,7 +5,7 @@
 
 class Generator{
     public:
-     static int** newTrack(NoteTransformer& transformer, int** initialSequence, int length, bool mask, bool applyVelocityFade);
+     static int** newTrack(NoteTransformer& transformer, int** initialSequence, int length, bool mask, int velocityFadeLength);
 };
 
 #endif
