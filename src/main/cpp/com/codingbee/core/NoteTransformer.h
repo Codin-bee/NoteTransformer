@@ -164,5 +164,7 @@ public:
     /// @param t the new temperature
     void setSoftmaxTemperature(float t);
 
+    int getContextSize(){return contextSize;}
+
 };
 #endif
