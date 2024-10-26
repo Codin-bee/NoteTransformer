@@ -6,6 +6,9 @@
 class Generator{
     public:
      static int** newTrack(NoteTransformer& transformer, int** initialSequence, int length, bool mask, int velocityFadeLength);
+
+    private: 
+     static int** convertOutputToNotes(float** output, int contextSize);
 };
 
 #endif

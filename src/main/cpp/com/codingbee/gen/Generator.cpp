@@ -25,8 +25,8 @@ int** Generator::newTrack(NoteTransformer& transformer, int** initialSequence, i
 
     int** output = nullptr;
     
-    for (int i = contextSize; i < length; i++) {
-        output = VarUtils::floorAndCastToInt(transformer.process(input), contextSize, 5);
+    for (int i = contextSize - 1; i < length; i++) {
+        output = convertOutputToNotes(transformer.process(input), contextSize);
         if (!output) {
             throw Exception("The function call returned null pointer", ExceptionType::INNER_ERROR);
         }
@@ -46,4 +46,17 @@ int** Generator::newTrack(NoteTransformer& transformer, int** initialSequence, i
 
     MemoryUtils::deallocateMatrix(input, contextSize);
     return track;
+}
+
+int **Generator::convertOutputToNotes(float **output, int contextSize){
+    int** notes = new int*[contextSize];
+    for (int i = 0; i < contextSize; i++){
+        notes[i] = new int[5];
+        notes[i][0] = VarUtils::getHighestIndexInSubVector(output[i], 0, 127);
+        notes[i][1] = VarUtils::getHighestIndexInSubVector(output[i], 128, 255) - 128;
+        notes[i][2] = output[i][256];
+        notes[i][3] = output[i][257];
+        notes[i][4] = output[i][258];
+    }
+    return notes;
 }
