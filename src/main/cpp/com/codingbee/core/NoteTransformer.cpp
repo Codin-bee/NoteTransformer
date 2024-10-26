@@ -492,22 +492,22 @@ void NoteTransformer::train(TrainingSettings settings){
                                 g = calculateGradientWithRespectTo(keyMatricies[i][j][k], l, settings, inputs, outputs);
                                 m_keyMatricies[i][j][k][l] = beta_1 * m_keyMatricies[i][j][k][l] + beta_3 * g;
                                 v_keyMatricies[i][j][k][l] = beta_2 * v_keyMatricies[i][j][k][l] + beta_4 * pow(g, 2);
-                                m_hat = 0 / (1 - pow(beta_1, time));
-                                v_hat = 0 / (1 - pow(beta_2, time));
+                                m_hat = m_keyMatricies[i][j][k][l] / (1 - pow(beta_1, time));
+                                v_hat = v_keyMatricies[i][j][k][l] / (1 - pow(beta_2, time));
                                 keyMatricies[i][j][k][l] = keyMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
 
                                 g = calculateGradientWithRespectTo(quarryMatricies[i][j][k], l, settings, inputs, outputs);
                                 m_quarryMatricies[i][j][k][l] = beta_1 * m_quarryMatricies[i][j][k][l] + beta_3 * g;
                                 v_quarryMatricies[i][j][k][l] = beta_2 * v_quarryMatricies[i][j][k][l] + beta_4 * pow(g, 2);
-                                m_hat = 0 / (1 - pow(beta_1, time));
-                                v_hat = 0 / (1 - pow(beta_2, time));
+                                m_hat = m_quarryMatricies[i][j][k][l] / (1 - pow(beta_1, time));
+                                v_hat = v_quarryMatricies[i][j][k][l] / (1 - pow(beta_2, time));
                                 quarryMatricies[i][j][k][l] = quarryMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                                 
                                 g = calculateGradientWithRespectTo(valueMatricies[i][j][k], l, settings, inputs, outputs);
                                 m_valueMatricies[i][j][k][l] = beta_1 * m_valueMatricies[i][j][k][l] + beta_3 * g;
                                 v_valueMatricies[i][j][k][l] = beta_2 * v_valueMatricies[i][j][k][l] + beta_4 * pow(g, 2);
-                                m_hat = 0 / (1 - pow(beta_1, time));
-                                v_hat = 0 / (1 - pow(beta_2, time));
+                                m_hat = m_valueMatricies[i][j][k][l] / (1 - pow(beta_1, time));
+                                v_hat = v_valueMatricies[i][j][k][l] / (1 - pow(beta_2, time));
                                 valueMatricies[i][j][k][l] = valueMatricies[i][j][k][l] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                             }
                         }
@@ -521,15 +521,34 @@ void NoteTransformer::train(TrainingSettings settings){
                         g = calculateGradientWithRespectTo(unembeddingMatrix[i], j, settings, inputs, outputs);
                         m_unembeddingMatrix[i][j] = beta_1 * m_unembeddingMatrix[i][j] + beta_3 * g;
                         v_unembeddingMatrix[i][j] = beta_2 * v_unembeddingMatrix[i][j] + beta_4 * pow(g, 2);
-                        m_hat = 0 / (1 - pow(beta_1, time));
-                        v_hat = 0 / (1 - pow(beta_2, time));
+                        m_hat = m_unembeddingMatrix[i][j] / (1 - pow(beta_1, time));
+                        v_hat = v_unembeddingMatrix[i][j] / (1 - pow(beta_2, time));
                         unembeddingMatrix[i][j] = unembeddingMatrix[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
                 save(settings.getSavePath());
 
-                //Gammas and betas
-                //TODO
+                //Layer normalization
+                for (int i = 0; i < layers; i++){
+                    for (int j = 0; j < d_model; j++){
+                        g = calculateGradientWithRespectTo(gammas[i], j, settings, inputs, outputs);
+                        m_gammas[i][j] = beta_1 * m_gammas[i][j] + beta_3 * g;
+                        v_gammas[i][j] = beta_2 * v_gammas[i][j] + beta_4 * pow(g, 2);
+                        m_hat = m_gammas[i][j] / (1 - pow(beta_1, time));
+                        v_hat = v_gammas[i][j] / (1 - pow(beta_2, time));
+                        gammas[i][j] = gammas[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
+                    }
+                }
+                for (int i = 0; i < layers; i++){
+                    for (int j = 0; j < d_model; j++){
+                        g = calculateGradientWithRespectTo(betas[i], j, settings, inputs, outputs);
+                        m_betas[i][j] = beta_1 * m_betas[i][j] + beta_3 * g;
+                        v_betas[i][j] = beta_2 * v_betas[i][j] + beta_4 * pow(g, 2);
+                        m_hat = m_betas[i][j] / (1 - pow(beta_1, time));
+                        v_hat = v_betas[i][j] / (1 - pow(beta_2, time));
+                        betas[i][j] = betas[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
+                    }
+                }
 
                 //Training data deallocation
                 for (int i = 0; i < settings.getBatchSize(); i++){
