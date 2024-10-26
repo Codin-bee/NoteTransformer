@@ -24,6 +24,10 @@ TrainingSettings::TrainingSettings(string configPath){
     inFile.close();
 }
 
+TrainingSettings::TrainingSettings(){
+    
+}
+
 void TrainingSettings::saveTo(string configPath){
     ofstream outFile(configPath + ".txt");
     if (!outFile.is_open()) {
