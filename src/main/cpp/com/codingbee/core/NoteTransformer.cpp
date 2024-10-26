@@ -565,12 +565,19 @@ void NoteTransformer::train(TrainingSettings settings){
             }
         }
         cout << "Training cost at the end of training: " << calculateAverageCost(settings.getDataPath(), 0, FileUtils::getNumberOfFilesInDir(settings.getDataPath())) << "\n";
-//Dealocation
-    deallocateTrainingVariables(m_keyEmbedding, v_keyEmbedding, m_velocityEmbedding, v_velocityEmbedding, m_prevNoteAlpha, 
-    v_prevNoteAlpha, m_nextNoteAlpha, v_nextNoteAlpha, m_absolutePos, v_absolutePos, m_connectingLayerWeights, v_connectingLayerWeights,
-    m_connectingLayerBiases, v_connectingLayerBiases, m_ffnWeights, v_ffnWeights, m_ffnBiases, v_ffnBiases, m_keyMatricies, v_keyMatricies,
-    m_quarryMatricies, v_quarryMatricies, m_valueMatricies, v_valueMatricies, m_betas, v_betas, m_gammas, v_gammas, m_unembeddingMatrix, v_unembeddingMatrix);
-}
+        //Saving Adam values
+        saveTrainingVariables(m_keyEmbedding, v_keyEmbedding, m_velocityEmbedding, v_velocityEmbedding, m_prevNoteAlpha, 
+        v_prevNoteAlpha, m_nextNoteAlpha, v_nextNoteAlpha, m_absolutePos, v_absolutePos, m_connectingLayerWeights, v_connectingLayerWeights,
+        m_connectingLayerBiases, v_connectingLayerBiases, m_ffnWeights, v_ffnWeights, m_ffnBiases, v_ffnBiases, m_keyMatricies, v_keyMatricies,
+        m_quarryMatricies, v_quarryMatricies, m_valueMatricies, v_valueMatricies, m_betas, v_betas, m_gammas, v_gammas, m_unembeddingMatrix, 
+        v_unembeddingMatrix, settings.getAdamParamasSavePath());
+    
+        //Dealocation of Adam values
+        deallocateTrainingVariables(m_keyEmbedding, v_keyEmbedding, m_velocityEmbedding, v_velocityEmbedding, m_prevNoteAlpha, 
+        v_prevNoteAlpha, m_nextNoteAlpha, v_nextNoteAlpha, m_absolutePos, v_absolutePos, m_connectingLayerWeights, v_connectingLayerWeights,
+        m_connectingLayerBiases, v_connectingLayerBiases, m_ffnWeights, v_ffnWeights, m_ffnBiases, v_ffnBiases, m_keyMatricies, v_keyMatricies,
+        m_quarryMatricies, v_quarryMatricies, m_valueMatricies, v_valueMatricies, m_betas, v_betas, m_gammas, v_gammas, m_unembeddingMatrix, v_unembeddingMatrix);
+    }
 
 float** NoteTransformer::embeddMatrix(int** matrix){
     float** embeddedMatrix = new float*[contextSize];
@@ -1044,6 +1051,69 @@ float**& m_unm, float**& v_unm){
     MemoryUtils::deallocateMatrix(m_unm, d_model);
     MemoryUtils::deallocateMatrix(v_unm, d_model);
 }
+
+void NoteTransformer::saveTrainingVariables(float**& m_ke, float**& v_ke, float**& m_ve, float**& v_ve, float*& m_pna, 
+float*& v_pna, float*& m_nna, float*& v_nna, float*& m_ap, float*& v_ap, float***& m_clw, float***& v_clw, float*& m_clb, 
+float*& v_clb, float****& m_ffnw, float****& v_ffnw, float**& m_ffnb, float**& v_ffnb, float****& m_km, float****& v_km, 
+float****& m_qm, float****& v_qm, float****& m_vm, float****& v_vm, float**& m_bet, float**& v_bet, float**& m_gam, float**& v_gam,
+float**& m_unm, float**& v_unm, string path){
+    std::filesystem::create_directories(path);
+    //Embedding matricies
+    FileUtils::saveMatrixToFiles(path + "m_keyEmbedding", m_ke, keyRange, d_keyEmbedding);
+    FileUtils::saveMatrixToFiles(path + "v_keyEmbedding", v_ke, keyRange, d_keyEmbedding);
+    FileUtils::saveMatrixToFiles(path + "m_velocityEmbedding", m_ve, velocityRange, d_velocityEmbedding);
+    FileUtils::saveMatrixToFiles(path + "v_velocityEmbedding", v_ve, velocityRange, d_velocityEmbedding);
+
+    //Embedding alphas
+    FileUtils::saveFloatVectorToFiles(path + "m_prevNoteAlpha", m_pna, d_prevNoteEmbedding);
+    FileUtils::saveFloatVectorToFiles(path + "v_prevNoteAlpha", v_pna, d_prevNoteEmbedding);
+    FileUtils::saveFloatVectorToFiles(path + "m_nextNoteAlpha", m_nna, d_nextNoteEmbedding);
+    FileUtils::saveFloatVectorToFiles(path + "v_nextNoteAlpha", v_nna, d_nextNoteEmbedding);
+    FileUtils::saveFloatVectorToFiles(path + "m_absolutePosition", m_ap, d_absolutePosition);
+    FileUtils::saveFloatVectorToFiles(path + "v_absolutePosition", v_ap, d_absolutePosition);
+
+    //Connecting layer
+    FileUtils::saveMatrixToFiles(path + "m_connectingLayerWeights0", m_clw[0], d_connectingLayer, d_embedding);
+    FileUtils::saveMatrixToFiles(path + "v_connectingLayerWeights0", v_clw[0], d_connectingLayer, d_embedding);
+    FileUtils::saveMatrixToFiles(path + "m_connectingLayerWeights1", v_clw[1], d_model, d_connectingLayer);
+    FileUtils::saveMatrixToFiles(path + "v_connectingLayerWeights1", v_clw[1], d_model, d_connectingLayer);
+    FileUtils::saveFloatVectorToFiles(path + "m_connectingLayerBiases", m_clb, d_connectingLayer);
+    FileUtils::saveFloatVectorToFiles(path + "v_connectingLayerBiases", v_clb, d_connectingLayer);
+
+    //FFN weights and biases
+    for (int i = 0; i < layers; i++) {
+        std::filesystem::create_directories(path + "ffn/" + to_string(i));
+        FileUtils::saveMatrixToFiles(path + "ffn/" + to_string(i) + "/m_weights0", m_ffnw[i][0], d_ffn, d_model);
+        FileUtils::saveMatrixToFiles(path + "ffn/" + to_string(i) + "/v_weights0", v_ffnw[i][0], d_ffn, d_model);
+        FileUtils::saveMatrixToFiles(path + "ffn/" + to_string(i) + "/m_weights1", v_ffnw[i][1], d_model, d_ffn);
+        FileUtils::saveMatrixToFiles(path + "ffn/" + to_string(i) + "/v_weights1", v_ffnw[i][1], d_model, d_ffn);
+    }
+
+    // Attention matricies
+    for (int i = 0; i < layers; i++){
+        for (int j = 0; j < headsPerLayer; j++){
+            std::filesystem::create_directories(path + "attention/" + to_string(i) + "/" + to_string(j));
+            FileUtils::saveMatrixToFiles(path + "attention/" + to_string(i) + "/" + to_string(j) + "m_keyMatricies", m_km[i][j], d_model, d_attention);
+            FileUtils::saveMatrixToFiles(path + "attention/" + to_string(i) + "/" + to_string(j) + "v_keyMatricies", v_km[i][j], d_model, d_attention);
+            FileUtils::saveMatrixToFiles(path + "attention/" + to_string(i) + "/" + to_string(j) + "m_quarryMatricies", m_qm[i][j], d_model, d_attention);
+            FileUtils::saveMatrixToFiles(path + "attention/" + to_string(i) + "/" + to_string(j) + "v_quarryMatricies", v_qm[i][j], d_model, d_attention);
+            FileUtils::saveMatrixToFiles(path + "attention/" + to_string(i) + "/" + to_string(j) + "m_valueMatricies", m_vm[i][j], d_model, d_model);
+            FileUtils::saveMatrixToFiles(path + "attention/" + to_string(i) + "/" + to_string(j) + "v_valueMatricies", v_vm[i][j], d_model, d_model);
+        }
+    }
+
+    //Layer normalization
+    FileUtils::saveMatrixToFiles(path + "m_betas", m_bet, layers, d_model);
+    FileUtils::saveMatrixToFiles(path + "v_betas", v_bet, layers, d_model);
+    FileUtils::saveMatrixToFiles(path + "m_gammas", m_gam, layers, d_model);
+    FileUtils::saveMatrixToFiles(path + "v_gammas", v_gam, layers, d_model);
+
+    // Unembedding
+    FileUtils::saveMatrixToFiles(path + "m_unembedding", m_unm, d_model, outputMatrixColumns);
+    FileUtils::saveMatrixToFiles(path + "v_unembedding", v_unm, d_model, outputMatrixColumns);
+}
+
+
 
 NoteTransformer::~NoteTransformer() {
     //Embedding matricies
