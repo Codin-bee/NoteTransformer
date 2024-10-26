@@ -97,6 +97,12 @@ public:
     float ****&v_qm, float ****&m_vm, float ****&v_vm, float **&m_bet, float **&v_bet, float **&m_gam, float **&v_gam, 
     float **&m_unm, float **&v_unm);
 
+    void saveTrainingVariables(float **&m_ke, float **&v_ke, float **&m_ve, float **&v_ve, float *&m_pna, float *&v_pna, 
+    float *&m_nna, float *&v_nna, float *&m_ap, float *&v_ap, float ***&m_clw, float ***&v_clw, float *&m_clb, float *&v_clb, 
+    float ****&m_ffnw, float ****&v_ffnw, float **&m_ffnb, float **&v_ffnb, float ****&m_km, float ****&v_km, float ****&m_qm, 
+    float ****&v_qm, float ****&m_vm, float ****&v_vm, float **&m_bet, float **&v_bet, float **&m_gam, float **&v_gam, 
+    float **&m_unm, float **&v_unm, string path);
+
     void randomInit();
 
     void save(string dirPath);
