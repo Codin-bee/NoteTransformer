@@ -12,3 +12,5 @@ src/main/cpp/com/codingbee/.vscode/launch.json
 src/main/cpp/com/codingbee/output/One1.exe
 error.log
 src/main/cpp/com/codingbee/output/NTMain.exe
+.idea
+out
