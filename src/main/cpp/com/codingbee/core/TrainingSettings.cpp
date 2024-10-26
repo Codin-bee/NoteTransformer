@@ -52,3 +52,7 @@ void TrainingSettings::setSavePath(string path){
 void TrainingSettings::setAdamParamsSavePath(string path){
     adamParamsSavePath = path;
 }
+
+void TrainingSettings::setLoadOldAdamParams(bool load){
+    loadOldAdamParams = load;
+}

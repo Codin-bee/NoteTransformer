@@ -15,6 +15,7 @@ class TrainingSettings{
     string dataPath;
     string savePath;
     string adamParamsSavePath;
+    bool loadOldAdamParams;
     int batchSize;
 
     public:
@@ -47,6 +48,9 @@ class TrainingSettings{
 
     string getAdamParamasSavePath(){return adamParamsSavePath;}
     void setAdamParamsSavePath(string path);
+
+    bool doesLoadOldAdamParams(){return loadOldAdamParams;}
+    void setLoadOldAdamParams(bool load);
 };
 
 #endif
