@@ -65,7 +65,23 @@ void FileUtils::saveMatrixToFiles(std::string fileName, int** matrix, int rows, 
     outFile.close();
 }
 
-void FileUtils::saveFloatVectorToFiles(std::string fileName, float* vector, int rows){
+void FileUtils::saveVectorToFiles(std::string fileName, float* vector, int rows){
+    ofstream outFile(fileName + ".txt");
+        
+    if (!outFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
+    }
+
+    outFile << rows << "\n";
+
+    for (int i = 0; i < rows; i++){
+            outFile << vector[i] << " ";
+    }
+
+    outFile.close();
+}
+
+void FileUtils::saveVectorToFiles(std::string fileName, int* vector, int rows){
     ofstream outFile(fileName + ".txt");
         
     if (!outFile.is_open()) {
@@ -143,6 +159,25 @@ float* FileUtils::readFloatVectorFromFile(string fileName) {
     inFile >> rows;
 
     float* vector = new float[rows];
+    for (int i = 0; i < rows; ++i) {
+        inFile >> vector[i];
+    }
+
+    inFile.close();
+    return vector;
+}
+
+int* FileUtils::readIntVectorFromFile(string fileName) {
+    ifstream inFile(fileName + ".txt");
+
+    if (!inFile.is_open()) {
+        throw Exception("The file " + fileName + " could not been opened", ExceptionType::FILE_HANDLEING);
+    }
+
+    int rows;
+    inFile >> rows;
+
+    int* vector = new int[rows];
     for (int i = 0; i < rows; ++i) {
         inFile >> vector[i];
     }

@@ -56,13 +56,29 @@ class FileUtils{
         /// @param vector The vector to save
         /// @param rows Length of given vector
         /// @throws File managing Exception if the file can not be opened
-        static void saveFloatVectorToFiles(std::string fileName, float* vector, int rows);
+        static void saveVectorToFiles(std::string fileName, float* vector, int rows);
 
         /// @brief Reads vector from given file
         /// @param fileName The path to the file
         /// @return The vector containing values from the file
         /// @throws File managing Exception if the file can not be opened
         static float* readFloatVectorFromFile(std::string fileName);
+
+
+        //Int vector
+        
+        /// @brief Saves given int vector to file.
+        /// @param fileName Name of the created file or the full path
+        /// @param vector The vector to save
+        /// @param rows Length of given vector
+        /// @throws File managing Exception if the file can not be opened
+        static void saveVectorToFiles(std::string fileName, int* vector, int rows);
+
+        /// @brief Reads vector from given file
+        /// @param fileName The path to the file
+        /// @return The vector containing values from the file
+        /// @throws File managing Exception if the file can not be opened
+        static int* readIntVectorFromFile(std::string fileName);
 };
 
 #endif
