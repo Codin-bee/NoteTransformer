@@ -1,14 +1,21 @@
 #include "VarUtils.h"
-#include <math.h>
+#include "Exception.h"
+#include <cmath>
 
-int **TypeUtils::floorAndCastToInt(float **matrix, int rows, int columns){
+int **TypeUtils::floorAndCastToInt(float **matrix, int rows, int columns) {
+    if (!matrix) {
+        throw Exception("Input matrix is null", ExceptionType::INVALID_ARGUMENT);
+    }
+
     int** outputMatrix = new int*[rows];
-    for (int i = 0; i < rows; i++){
+
+    for (int i = 0; i < rows; i++) {
         outputMatrix[i] = new int[columns];
-        for (int j = 0; j < columns; j++){
+        for (int j = 0; j < columns; j++) {
             outputMatrix[i][j] = floor(matrix[i][j]);
         }
     }
+
     return outputMatrix;
 }
 
