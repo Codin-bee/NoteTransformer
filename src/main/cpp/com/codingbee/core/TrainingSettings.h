@@ -19,6 +19,9 @@ class TrainingSettings{
     int batchSize;
 
     public:
+    TrainingSettings(string configPath);
+    void saveTo(string configPath);
+
     int getEpochs(){return epochs;}
     void setEpochs(int n);
 
