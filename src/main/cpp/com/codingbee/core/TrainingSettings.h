@@ -19,6 +19,7 @@ class TrainingSettings{
     int batchSize;
 
     public:
+    TrainingSettings();
     TrainingSettings(string configPath);
     void saveTo(string configPath);
 
