@@ -16,6 +16,12 @@ class MemoryUtils{
      /// @param columns Number of columns in the matrix
      static void allocateMatrixWithZeros(float**& matrix, int rows, int columns);
 
+     /// @brief Allocates matrix of given sizes and returns pointer to it, where all the values are set to 0
+     /// @param rows Number of rows in the matrix
+     /// @param columns Number of columns in the matrix
+     /// @returns Pointer to the new created matrix with zeros
+     static float**& allocateMatrixWithZeros(int rows, int columns);
+
      /// @brief Deallocates matrix at given adress with given size
      /// @param matrix The pointer to the matrix adress
      /// @param rows Number of rows in the matrix
