@@ -279,37 +279,20 @@ void NoteTransformer::train(TrainingSettings settings){
         int i, j, k, l;
         float g, m_hat, v_hat, time;
         float beta_1 = settings.getBeta_1(), beta_2 =  settings.getBeta_2(), beta_3 = 1 - beta_1, beta_4 = 1 - beta_2, alpha = settings.getLearningRate(), epsilon = settings.getEpsilon();
-
-//Allocation
+        //Allocation
         //Embedding matricies
-        float** m_keyEmbedding;
-        float** v_keyEmbedding;
-        MemoryUtils::allocateMatrixWithZeros(m_keyEmbedding, keyRange, d_keyEmbedding);
-        MemoryUtils::allocateMatrixWithZeros(v_keyEmbedding, keyRange, d_keyEmbedding);
-        float** m_velocityEmbedding;
-        float** v_velocityEmbedding;
-        MemoryUtils::allocateMatrixWithZeros(m_velocityEmbedding, velocityRange, d_velocityEmbedding);
-        MemoryUtils::allocateMatrixWithZeros(v_velocityEmbedding, velocityRange, d_velocityEmbedding);
+        float** m_keyEmbedding = MemoryUtils::allocateMatrixWithZeros(keyRange, d_keyEmbedding);
+        float** v_keyEmbedding = MemoryUtils::allocateMatrixWithZeros(keyRange, d_keyEmbedding);
+        float** m_velocityEmbedding = MemoryUtils::allocateMatrixWithZeros(velocityRange, d_velocityEmbedding);
+        float** v_velocityEmbedding = MemoryUtils::allocateMatrixWithZeros(velocityRange, d_velocityEmbedding);
 
         //Embedding aplhas
-        float* m_prevNoteAlpha = new float[d_prevNoteEmbedding];
-        float* v_prevNoteAlpha = new float[d_prevNoteEmbedding];
-        for (i = 0; i < d_prevNoteEmbedding; i++){
-            m_prevNoteAlpha[i] = 0;
-            v_prevNoteAlpha[i] = 0;
-        } 
-        float* m_nextNoteAlpha = new float[d_nextNoteEmbedding];
-        float* v_nextNoteAlpha = new float[d_nextNoteEmbedding];
-        for (i = 0; i < d_nextNoteEmbedding; i++){
-            m_nextNoteAlpha[i] = 0;
-            v_nextNoteAlpha[i] = 0;
-        } 
-        float* m_absolutePos = new float[d_absolutePosition];
-        float* v_absolutePos = new float[d_absolutePosition];
-        for (i = 0; i < d_absolutePosition; i++){
-            m_absolutePos[i] = 0;
-            v_absolutePos[i] = 0;
-        }
+        float* m_prevNoteAlpha = new float[d_prevNoteEmbedding]();
+        float* v_prevNoteAlpha = new float[d_prevNoteEmbedding]();
+        float* m_nextNoteAlpha = new float[d_nextNoteEmbedding]();
+        float* v_nextNoteAlpha = new float[d_nextNoteEmbedding]();
+        float* m_absolutePos = new float[d_absolutePosition]();
+        float* v_absolutePos = new float[d_absolutePosition]();
 
         //Connecting layer
         float*** m_connectingLayerWeights= new float**[2];
@@ -318,12 +301,8 @@ void NoteTransformer::train(TrainingSettings settings){
         MemoryUtils::allocateMatrixWithZeros(v_connectingLayerWeights[0], d_connectingLayer, d_embedding);
         MemoryUtils::allocateMatrixWithZeros(m_connectingLayerWeights[1], d_model, d_connectingLayer);
         MemoryUtils::allocateMatrixWithZeros(v_connectingLayerWeights[1], d_model, d_connectingLayer);
-        float* m_connectingLayerBiases = new float[d_connectingLayer];
-        float* v_connectingLayerBiases = new float[d_connectingLayer];
-        for (i = 0; i < d_connectingLayer; i++){
-            m_connectingLayerBiases[i] = 0;
-            v_connectingLayerBiases[i] = 0;
-        }
+        float* m_connectingLayerBiases = new float[d_connectingLayer]();
+        float* v_connectingLayerBiases = new float[d_connectingLayer]();
 
         //FFN weights and biases
         float**** m_ffnWeights= new float***[layers];
@@ -336,11 +315,8 @@ void NoteTransformer::train(TrainingSettings settings){
             MemoryUtils::allocateMatrixWithZeros(m_ffnWeights[i][1], d_model, d_ffn);
             MemoryUtils::allocateMatrixWithZeros(v_ffnWeights[i][1], d_model, d_ffn);
         }
-        
-        float** m_ffnBiases;
-        float** v_ffnBiases;
-        MemoryUtils::allocateMatrixWithZeros(m_ffnBiases, layers, d_ffn);
-        MemoryUtils::allocateMatrixWithZeros(v_ffnBiases, layers, d_ffn);
+        float** m_ffnBiases = MemoryUtils::allocateMatrixWithZeros(layers, d_ffn);
+        float** v_ffnBiases = MemoryUtils::allocateMatrixWithZeros(layers, d_ffn);
 
 
         //Attention matricies
@@ -367,20 +343,14 @@ void NoteTransformer::train(TrainingSettings settings){
             }
         }
         //Layer normalization
-        float** m_betas;
-        float** v_betas;
-        float** m_gamas;
-        float** v_gamas;
-        MemoryUtils::allocateMatrixWithZeros(m_betas, layers, d_model);
-        MemoryUtils::allocateMatrixWithZeros(v_betas, layers, d_model);
-        MemoryUtils::allocateMatrixWithZeros(m_gamas, layers, d_model);
-        MemoryUtils::allocateMatrixWithZeros(v_gamas, layers, d_model);
+        float** m_betas = MemoryUtils::allocateMatrixWithZeros(layers, d_model);
+        float** v_betas = MemoryUtils::allocateMatrixWithZeros(layers, d_model);
+        float** m_gammas = MemoryUtils::allocateMatrixWithZeros(layers, d_model);
+        float** v_gammas = MemoryUtils::allocateMatrixWithZeros(layers, d_model);
 
         //Unebedding
-        float** m_unembeddingMatrix;
-        float** v_unembeddingMatrix;
-        MemoryUtils::allocateMatrixWithZeros(m_unembeddingMatrix, d_model, outputMatrixColumns);
-        MemoryUtils::allocateMatrixWithZeros(v_unembeddingMatrix, d_model, outputMatrixColumns);
+        float** m_unembeddingMatrix = MemoryUtils::allocateMatrixWithZeros(d_model, outputMatrixColumns);
+        float** v_unembeddingMatrix = MemoryUtils::allocateMatrixWithZeros(d_model, outputMatrixColumns);
 
         //Inputs and outputs
         int*** inputs = new int**[settings.getBatchSize()];
@@ -391,6 +361,9 @@ void NoteTransformer::train(TrainingSettings settings){
             cout << "Training cost at the start of epoch " + to_string(epoch) + " : " << calculateAverageCost(settings.getDataPath(), 0, FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / 2) << "\n";
             time = epoch + 1;
             for(int batchNo = 0; batchNo < FileUtils::getNumberOfFilesInDir(settings.getDataPath()) / settings.getBatchSize(); batchNo++){
+                //Training data allocation
+                int*** inputs = new int**[settings.getBatchSize()];
+                float*** outputs = new float**[settings.getBatchSize()];
                 for (int i = 0; i < settings.getBatchSize(); i++){
                     inputs[i] = FileUtils::readIntMatrixFromFile(settings.getDataPath() + "input" + to_string(batchNo * settings.getBatchSize() + i));
                     outputs[i] = FileUtils::readFloatMatrixFromFile(settings.getDataPath() + "output" + to_string(batchNo * settings.getBatchSize() + i));
@@ -407,7 +380,6 @@ void NoteTransformer::train(TrainingSettings settings){
                         keyEmbeddingMatrix[i][j] = keyEmbeddingMatrix[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
-                cout << "\n";
                 for (i = 0; i < velocityRange; i++){
                     cout << i << " ";
                     for (j = 0; j < d_velocityEmbedding; j++){
@@ -419,8 +391,8 @@ void NoteTransformer::train(TrainingSettings settings){
                         velocityEmbeddingMatrix[i][j] = velocityEmbeddingMatrix[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
-save(settings.getSavePath());
-cout << "Embeddings \n";
+                save(settings.getSavePath());
+
                 //Embedding aplhas
                 for (i = 0; i < d_prevNoteEmbedding; i++){
                         g = calculateGradientWithRespectTo(prevNoteAlphas, i, settings, inputs, outputs);
@@ -446,8 +418,8 @@ cout << "Embeddings \n";
                         v_hat = v_absolutePos[i] / (1 - pow(beta_2, time));
                         absolutePosAlphas[i] = absolutePosAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
-save(settings.getSavePath());
-cout << "Embeddings 2 \n";
+                save(settings.getSavePath());
+
                 //Connecting layer
                 for (i = 0; i < d_connectingLayer; i++){
                     for (j = 0; j < d_embedding; j++){
@@ -477,7 +449,8 @@ cout << "Embeddings 2 \n";
                         v_hat = v_connectingLayerBiases[i] / (1 - pow(beta_2, time));
                         connectingLayerBiases[i] = connectingLayerBiases[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
-save(settings.getSavePath());
+                save(settings.getSavePath());
+
                 //FFN weights and biases
                 for (i = 0; i < layers; i++){
                     for (j = 0; j < d_ffn; j++){
@@ -509,7 +482,8 @@ save(settings.getSavePath());
                         ffnBiases[i][j] = ffnBiases[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
-save(settings.getSavePath());
+                save(settings.getSavePath());
+
                 //Attention matricies
                 for (i = 0; i < layers; i++){
                     for (j = 0; j < headsPerLayer; j++){
@@ -539,7 +513,8 @@ save(settings.getSavePath());
                         }
                     }
                 }
-save(settings.getSavePath());
+                save(settings.getSavePath());
+
                 //Unembedding
                 for (i = 0; i < keyRange + velocityRange + 3; i++){
                     for (j = 0; j < d_model; j++){
@@ -551,78 +526,31 @@ save(settings.getSavePath());
                         unembeddingMatrix[i][j] = unembeddingMatrix[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
+                save(settings.getSavePath());
+
+                //Gammas and betas
+                //TODO
+
+                //Training data deallocation
+                for (int i = 0; i < settings.getBatchSize(); i++){
+                for (int j = 0; j < contextSize; j++){
+                    delete[] inputs[i][j];
+                    delete[] outputs[i][j];
+                }
+                delete[] inputs[i];
+                delete[] outputs[i];
             }
-save(settings.getSavePath());
+                delete[] inputs;
+                delete[] outputs;
+                save(settings.getSavePath());
+            }
         }
         cout << "Training cost at the end of training: " << calculateAverageCost(settings.getDataPath(), 0, FileUtils::getNumberOfFilesInDir(settings.getDataPath())) << "\n";
 //Dealocation
-    //Embedding matricies
-    MemoryUtils::deallocateMatrix(m_keyEmbedding, keyRange);
-    MemoryUtils::deallocateMatrix(v_keyEmbedding, keyRange);
-    MemoryUtils::deallocateMatrix(m_velocityEmbedding, velocityRange);
-    MemoryUtils::deallocateMatrix(v_velocityEmbedding, velocityRange);
-
-    //Embedding alphas
-    delete[] m_prevNoteAlpha;
-    delete[] v_prevNoteAlpha;
-    delete[] m_nextNoteAlpha;
-    delete[] v_nextNoteAlpha;
-    delete[] m_absolutePos;
-    delete[] v_absolutePos;
-
-    //Connecting layer
-    MemoryUtils::deallocateMatrix(m_connectingLayerWeights[0], d_connectingLayer);
-    MemoryUtils::deallocateMatrix(v_connectingLayerWeights[0], d_connectingLayer);
-    MemoryUtils::deallocateMatrix(v_connectingLayerWeights[1], d_model);
-    MemoryUtils::deallocateMatrix(v_connectingLayerWeights[1], d_model);
-    delete[] m_connectingLayerWeights;
-    delete[] v_connectingLayerWeights;
-    delete[] m_connectingLayerBiases;
-    delete[] v_connectingLayerBiases;
-
-    //FFN weights and biases
-    for (i = 0; i < layers; i++) {
-    MemoryUtils::deallocateMatrix(m_ffnWeights[i][0], d_ffn);
-    MemoryUtils::deallocateMatrix(v_ffnWeights[i][0], d_ffn);
-    MemoryUtils::deallocateMatrix(v_ffnWeights[i][1], d_model);
-    MemoryUtils::deallocateMatrix(v_ffnWeights[i][1], d_model);
-        delete[] m_ffnBiases[i];
-        delete[] v_ffnBiases[i];
-    }
-    delete[] m_ffnWeights;
-    delete[] v_ffnWeights;
-    delete[] m_ffnBiases;
-    delete[] v_ffnBiases;
-
-    // Attention matricies
-    MemoryUtils::deallocate4DTensor(m_keyMatricies, layers, headsPerLayer, d_model);
-    MemoryUtils::deallocate4DTensor(v_keyMatricies, layers, headsPerLayer, d_model);
-    MemoryUtils::deallocate4DTensor(m_quarryMatricies, layers, headsPerLayer, d_model);
-    MemoryUtils::deallocate4DTensor(v_quarryMatricies, layers, headsPerLayer, d_model);
-    MemoryUtils::deallocate4DTensor(v_valueMatricies, layers, headsPerLayer, d_model);
-    MemoryUtils::deallocate4DTensor(v_valueMatricies, layers, headsPerLayer, d_model);
-
-    //Layer normalization
-    MemoryUtils::deallocateMatrix(m_betas, layers);
-    MemoryUtils::deallocateMatrix(v_betas, layers);
-    MemoryUtils::deallocateMatrix(m_gamas, layers);
-    MemoryUtils::deallocateMatrix(v_gamas, layers);
-
-    // Unembedding
-    MemoryUtils::deallocateMatrix(m_unembeddingMatrix, d_model);
-    MemoryUtils::deallocateMatrix(v_unembeddingMatrix, d_model);
-
-    //Training data
-    for (int i = 0; i < settings.getBatchSize(); i++){
-        for (int j = 0; j < contextSize; j++){
-            delete[] inputs[i][j];
-            delete[] outputs[i][j];
-        }
-        delete[] inputs[i];
-        delete[] outputs[i];
-    }
-    delete[] inputs;
-    delete[] outputs;
+    deallocateTrainingVariables(m_keyEmbedding, v_keyEmbedding, m_velocityEmbedding, v_velocityEmbedding, m_prevNoteAlpha, 
+    v_prevNoteAlpha, m_nextNoteAlpha, v_nextNoteAlpha, m_absolutePos, v_absolutePos, m_connectingLayerWeights, v_connectingLayerWeights,
+    m_connectingLayerBiases, v_connectingLayerBiases, m_ffnWeights, v_ffnWeights, m_ffnBiases, v_ffnBiases, m_keyMatricies, v_keyMatricies,
+    m_quarryMatricies, v_quarryMatricies, m_valueMatricies, v_valueMatricies, m_betas, v_betas, m_gammas, v_gammas, m_unembeddingMatrix, v_unembeddingMatrix);
 }
 
 float** NoteTransformer::embeddMatrix(int** matrix){
@@ -1035,6 +963,68 @@ void NoteTransformer::init(string dirPath){
         //Unembedding
         unembeddingMatrix = FileUtils::readFloatMatrixFromFile(dirPath + "/unembedding");
     }
+
+void NoteTransformer::deallocateTrainingVariables(float**& m_ke, float**& v_ke, float**& m_ve, float**& v_ve, float*& m_pna, 
+float*& v_pna, float*& m_nna, float*& v_nna, float*& m_ap, float*& v_ap, float***& m_clw, float***& v_clw, float*& m_clb, 
+float*& v_clb, float****& m_ffnw, float****& v_ffnw, float**& m_ffnb, float**& v_ffnb, float****& m_km, float****& v_km, 
+float****& m_qm, float****& v_qm, float****& m_vm, float****& v_vm, float**& m_bet, float**& v_bet, float**& m_gam, float**& v_gam,
+float**& m_unm, float**& v_unm){
+    //Embedding matricies
+    MemoryUtils::deallocateMatrix(m_ke, keyRange);
+    MemoryUtils::deallocateMatrix(v_ke, keyRange);
+    MemoryUtils::deallocateMatrix(m_ve, velocityRange);
+    MemoryUtils::deallocateMatrix(v_ve, velocityRange);
+
+    //Embedding alphas
+    delete[] m_pna;
+    delete[] v_pna;
+    delete[] m_nna;
+    delete[] v_nna;
+    delete[] m_ap;
+    delete[] v_ap;
+
+    //Connecting layer
+    MemoryUtils::deallocateMatrix(m_clw[0], d_connectingLayer);
+    MemoryUtils::deallocateMatrix(v_clw[0], d_connectingLayer);
+    MemoryUtils::deallocateMatrix(v_clw[1], d_model);
+    MemoryUtils::deallocateMatrix(v_clw[1], d_model);
+    delete[] m_clw;
+    delete[] v_clw;
+    delete[] m_clb;
+    delete[] v_clb;
+
+    //FFN weights and biases
+    for (int i = 0; i < layers; i++) {
+    MemoryUtils::deallocateMatrix(m_ffnw[i][0], d_ffn);
+    MemoryUtils::deallocateMatrix(v_ffnw[i][0], d_ffn);
+    MemoryUtils::deallocateMatrix(v_ffnw[i][1], d_model);
+    MemoryUtils::deallocateMatrix(v_ffnw[i][1], d_model);
+        delete[] m_ffnb[i];
+        delete[] v_ffnb[i];
+    }
+    delete[] m_ffnw;
+    delete[] v_ffnw;
+    delete[] m_ffnb;
+    delete[] v_ffnb;
+
+    // Attention matricies
+    MemoryUtils::deallocate4DTensor(m_km, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(v_km, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(m_qm, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(v_qm, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(m_vm, layers, headsPerLayer, d_model);
+    MemoryUtils::deallocate4DTensor(v_vm, layers, headsPerLayer, d_model);
+
+    //Layer normalization
+    MemoryUtils::deallocateMatrix(m_bet, layers);
+    MemoryUtils::deallocateMatrix(v_bet, layers);
+    MemoryUtils::deallocateMatrix(m_gam, layers);
+    MemoryUtils::deallocateMatrix(v_gam, layers);
+
+    // Unembedding
+    MemoryUtils::deallocateMatrix(m_unm, d_model);
+    MemoryUtils::deallocateMatrix(v_unm, d_model);
+}
 
 NoteTransformer::~NoteTransformer() {
     //Embedding matricies
