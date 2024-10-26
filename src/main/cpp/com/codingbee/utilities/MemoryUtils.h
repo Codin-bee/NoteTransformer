@@ -20,7 +20,7 @@ class MemoryUtils{
      /// @param rows Number of rows in the matrix
      /// @param columns Number of columns in the matrix
      /// @returns Pointer to the new created matrix with zeros
-     static float**& allocateMatrixWithZeros(int rows, int columns);
+     static float** allocateMatrixWithZeros(int rows, int columns);
 
      /// @brief Deallocates matrix at given adress with given size
      /// @param matrix The pointer to the matrix adress

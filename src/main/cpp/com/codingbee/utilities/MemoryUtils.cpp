@@ -41,7 +41,7 @@ void MemoryUtils::allocateMatrixWithZeros(float**& matrix, int rows, int columns
     }
 }
 
-float**& MemoryUtils::allocateMatrixWithZeros(int rows, int columns){
+float** MemoryUtils::allocateMatrixWithZeros(int rows, int columns){
     float** matrix = new float*[rows];
     for (int i = 0; i < rows; i++){
         matrix[i] = new float[columns]();
