@@ -4,6 +4,7 @@
 
 enum ExceptionType{
     INVALID_ARGUMENT,
+    INNER_ERROR,
     FILE_HANDLEING,
     UNKOWN
     };
