@@ -29,9 +29,11 @@ void VarUtils::copyMatrix(int **matrix1, int **&matrix2, int rows, int columns){
 
 int VarUtils::getHighestIndexInSubVector(float *vector, int startingIndex, int endIndex){
     int highestIndex = startingIndex;
+    int highestValue = 0;
     for (int i = startingIndex + 1; i <= endIndex; i++){
-        if (i > highestIndex){
+        if (vector[i] > highestValue){
             highestIndex = i;
+            highestValue = vector[i];
         }
     }
     return highestIndex;
