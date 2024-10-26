@@ -653,10 +653,10 @@ void NoteTransformer::normalizeOutputMatrix(float**& matrix){
         }
         delete[] tempArray;
 
-        // Timings (currently multiplication by 100)
-        matrix[i][keyRange + velocityRange] = round(matrix[i][keyRange + velocityRange] * 100);
-        matrix[i][keyRange + velocityRange + 1] = round(matrix[i][keyRange + velocityRange + 1] * 100);
-        matrix[i][keyRange + velocityRange + 2] = round(matrix[i][keyRange + velocityRange + 2] * 100);
+        // Timings (currently multiplication by 1000)
+        matrix[i][keyRange + velocityRange] = abs(round(matrix[i][keyRange + velocityRange] * 1000));
+        matrix[i][keyRange + velocityRange + 1] = abs(round(matrix[i][keyRange + velocityRange + 1] * 1000));
+        matrix[i][keyRange + velocityRange + 2] = abs(round(matrix[i][keyRange + velocityRange + 2] * 1000));
     }
 }
 
