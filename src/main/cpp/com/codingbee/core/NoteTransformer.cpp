@@ -350,6 +350,7 @@ void NoteTransformer::train(TrainingSettings settings){
                     outputs[i] = FileUtils::readFloatMatrixFromFile(settings.getDataPath() + "/output" + to_string(batchNo * settings.getBatchSize() + i));
                 }
                 save(settings.getSavePath());
+                cout <<"Batch loaded \n";
                 //Embedding matricies
                 for (int i = 0; i < keyRange; i++){
                     for (int j = 0; j < d_keyEmbedding; j++){
@@ -361,6 +362,8 @@ void NoteTransformer::train(TrainingSettings settings){
                         keyEmbeddingMatrix[i][j] = keyEmbeddingMatrix[i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
+                save(settings.getSavePath());
+                cout << "Key embeddings \n";
                 for (int i = 0; i < velocityRange; i++){
                     for (int j = 0; j < d_velocityEmbedding; j++){
                         g = calculateGradientWithRespectTo(velocityEmbeddingMatrix[i], j, settings, inputs, outputs);
@@ -372,7 +375,7 @@ void NoteTransformer::train(TrainingSettings settings){
                     }
                 }
                 save(settings.getSavePath());
-                cout << "Key + velocity embeddings \n";
+                cout << "Velocity embeddings \n";
 
                 //Embedding aplhas
                 for (int i = 0; i < d_prevNoteEmbedding; i++){
@@ -383,6 +386,8 @@ void NoteTransformer::train(TrainingSettings settings){
                         v_hat = v_prevNoteAlpha[i] / (1 - pow(beta_2, time));
                         prevNoteAlphas[i] = prevNoteAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
+                save(settings.getSavePath());
+                cout << "Previous note alphas \n";
                 for (int i = 0; i < d_nextNoteEmbedding; i++){
                         g = calculateGradientWithRespectTo(nextNoteAlphas, i, settings, inputs, outputs);
                         m_nextNoteAlpha[i] = beta_1 * m_nextNoteAlpha[i] + beta_3 * g;
@@ -391,6 +396,8 @@ void NoteTransformer::train(TrainingSettings settings){
                         v_hat = v_nextNoteAlpha[i] / (1 - pow(beta_2, time));
                         nextNoteAlphas[i] = nextNoteAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
+                save(settings.getSavePath());
+                cout << "Next note aplhas \n";
                 for (int i = 0; i < d_absolutePosition; i++){
                         g = calculateGradientWithRespectTo(absolutePosAlphas, i, settings, inputs, outputs);
                         m_absolutePos[i] = beta_1 * m_absolutePos[i] + beta_3 * g;
@@ -400,7 +407,7 @@ void NoteTransformer::train(TrainingSettings settings){
                         absolutePosAlphas[i] = absolutePosAlphas[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
                 save(settings.getSavePath());
-                cout << "Time embeddings \n";
+                cout << "Absolute position alphas \n";
 
                 //Connecting layer
                 for (int i = 0; i < d_connectingLayer; i++){
@@ -410,7 +417,7 @@ void NoteTransformer::train(TrainingSettings settings){
                         v_connectingLayerWeights[0][i][j] = beta_2 * v_velocityEmbedding[i][j] + beta_4 * pow(g, 2);
                         m_hat = m_connectingLayerWeights[0][i][j] / (1 - pow(beta_1, time));
                         v_hat = v_connectingLayerWeights[0][i][j] / (1 - pow(beta_2, time));
-                        connectingLayerWeights[0][i][j] = connectingLayerWeights[i][0][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
+                        connectingLayerWeights[0][i][j] = connectingLayerWeights[0][i][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
                 for (int i = 0; i < d_model; i++){
@@ -423,6 +430,8 @@ void NoteTransformer::train(TrainingSettings settings){
                         connectingLayerWeights[1][i][j] = connectingLayerWeights[i][0][j] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                     }
                 }
+                save(settings.getSavePath());
+                cout << "Connecting layer weights\n";
                 for (int i = 0; i < d_connectingLayer; i++){
                         g = calculateGradientWithRespectTo(connectingLayerBiases, i, settings, inputs, outputs);
                         m_connectingLayerBiases[i] = beta_1 * m_connectingLayerBiases[i] + beta_3 * g;
@@ -432,7 +441,7 @@ void NoteTransformer::train(TrainingSettings settings){
                         connectingLayerBiases[i] = connectingLayerBiases[i] - m_hat * (alpha / (sqrt(v_hat) + epsilon));
                 }
                 save(settings.getSavePath());
-                cout << "Connecting layer \n";
+                cout << "Connecting layer biases\n";
 
                 //FFN weights and biases
                 for (int i = 0; i < layers; i++){
@@ -707,10 +716,10 @@ float NoteTransformer::calculateCost(int** input, float** expectedOutput){
     float** recieved = process(input);
     for (int i = 0; i < contextSize; i++){
         for (j = 0; j < keyRange; j++){
-            cost += pow((recieved[i][j] - expectedOutput[i][j]), 2);
+            cost += pow((recieved[i][j] - expectedOutput[i][j]), 2) / 2;
         }
         for (j = keyRange; j < velocityRange; j++){
-            cost += pow((recieved[i][j] - expectedOutput[i][j]), 2);
+            cost += pow((recieved[i][j] - expectedOutput[i][j]), 2) / 2;
         }
         for (j = keyRange + velocityRange; j < keyRange + velocityRange + 3; j++){
             cost += abs((recieved[i][j] - expectedOutput[i][j])) * 0.001;
