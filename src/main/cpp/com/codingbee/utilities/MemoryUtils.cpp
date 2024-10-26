@@ -1,5 +1,4 @@
 #include "MemoryUtils.h"
-
 void MemoryUtils::allocateMatrix(float**& matrix, int rows, int columns){
     matrix = new float*[rows];
     for (int i = 0; i < rows; i++){
@@ -16,7 +15,7 @@ void MemoryUtils::deallocateMatrix(float**& matrix, int rows){
 
 void MemoryUtils::deallocateMatrix(int**& matrix, int rows){
     for (int i = 0; i < rows; i++){
-        delete[] matrix;
+        delete[] matrix[i];
     }
     delete[] matrix;
 }
